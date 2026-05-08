@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>SSS Run — Prototype</title>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+/* ─── Reset & base ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f5f5f7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── App shell ─────────────────────────────────────────────────────── */
+#app {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 40px rgba(0,0,0,.15);
+}
+
+/* ─── Header ────────────────────────────────────────────────────────── */
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 10px;
+  background: #fff;
+  z-index: 30;
+  flex-shrink: 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #1a1a1a;
+}
+
+.logo span {
+  color: #2d9e2d;
+}
+
+.avatar-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2d9e2d, #56c756);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(45,158,45,.3);
+}
+
+/* ─── Health bar ────────────────────────────────────────────────────── */
+#healthbar-wrap {
+  padding: 6px 20px 8px;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.hb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.hb-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  letter-spacing: .4px;
+}
+
+.hb-track {
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hb-fill {
+  height: 100%;
+  width: 80%;
+  background: linear-gradient(90deg, #2d9e2d, #56c756);
+  border-radius: 4px;
+  transition: width .5s ease;
+}
+
+/* ─── Tab switcher ───────────────────────────────────────────────────── */
+#tabs {
+  display: flex;
+  padding: 0 20px 0;
+  background: #fff;
+  flex-shrink: 0;
+  border-bottom: 1px solid #f0f0f0;
+  position: relative;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #aaa;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: color .2s;
+  position: relative;
+  z-index: 1;
+}
+
+.tab-btn.active {
+  color: #1a1a1a;
+}
+
+.tab-ink {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  width: calc(50%);
+  background: #2d9e2d;
+  border-radius: 2px 2px 0 0;
+  transition: left .25s cubic-bezier(.4,0,.2,1);
+  left: 0;
+}
+
+/* ─── Main content (map + panels) ───────────────────────────────────── */
+#content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Map */
+#map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Leaflet attribution (compact) */
+.leaflet-control-attribution {
+  font-size: 8px !important;
+}
+
+/* Friends overlay */
+#friends-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(12px);
+  overflow-y: auto;
+  padding: 14px 16px 16px;
+  transform: translateX(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+
+#friends-panel.visible {
+  transform: translateX(0);
+}
+
+.fp-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 14px;
+}
+
+.group-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #ececec;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.gc-emoji { font-size: 26px; flex-shrink: 0; }
+
+.gc-info { flex: 1; min-width: 0; }
+
+.gc-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gc-meta {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+  display: flex;
+  gap: 8px;
+}
+
+.gc-active { color: #2d9e2d; font-weight: 600; }
+
+.join-btn {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1.5px solid #2d9e2d;
+  background: transparent;
+  color: #2d9e2d;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all .18s;
+}
+
+.join-btn.joined {
+  background: #2d9e2d;
+  color: #fff;
+}
+
+/* ─── Online players marker style ──────────────────────────────────── */
+.player-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2.5px solid;
+  font-size: 11px;
+  font-weight: 800;
+  color: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  cursor: pointer;
+}
+
+/* ─── Bottom nav shell ──────────────────────────────────────────────── */
+#bottom-nav-wrap {
+  position: relative;
+  flex-shrink: 0;
+  height: 90px;
+  /* ensure snake canvas is on top of the SVG */
+}
+
+/* SVG curved nav bar */
+#nav-svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 90px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* Nav buttons */
+#nav-buttons {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 10px;
+  z-index: 25;
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding-bottom: 4px;
+  color: #bbb;
+  transition: color .2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.nav-btn.active { color: #2d9e2d; }
+
+.nav-icon {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2;
+}
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+
+/* Center notch placeholder */
+.nav-center {
+  width: 90px;
+  flex-shrink: 0;
+}
+
+/* ─── PLAY button ────────────────────────────────────────────────────── */
+#play-btn {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #2d9e2d, #1d7a1d);
+  border: 4px solid #fff;
+  box-shadow: 0 4px 20px rgba(45,158,45,.45);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 1.5px;
+  font-family: 'Inter', sans-serif;
+  z-index: 30;
+  transition: transform .1s, box-shadow .2s;
+}
+
+#play-btn:active {
+  transform: translateX(-50%) scale(0.93);
+  box-shadow: 0 2px 10px rgba(45,158,45,.3);
+}
+
+/* ─── Snake canvas ──────────────────────────────────────────────────── */
+#snake-canvas {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 90px;
+  z-index: 28; /* above nav SVG, below PLAY button */
+  pointer-events: none;
+}
+
+/* ─── Swipe hint ─────────────────────────────────────────────────────── */
+#swipe-hint {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 20px;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .4s;
+  white-space: nowrap;
+}
+
+#swipe-hint.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Header ── -->
+  <div id="header">
+    <div class="logo">SSS <span>run</span></div>
+    <button class="avatar-btn" id="avatar-btn">J</button>
+  </div>
+
+  <!-- ── Health bar ── -->
+  <div id="healthbar-wrap">
+    <div class="hb-row">
+      <span class="hb-label">❤️ HP</span>
+      <span class="hb-label" id="hp-text">80 / 100</span>
+    </div>
+    <div class="hb-track">
+      <div class="hb-fill" id="hb-fill"></div>
+    </div>
+  </div>
+
+  <!-- ── Tab switcher ── -->
+  <div id="tabs">
+    <button class="tab-btn active" data-tab="general">General</button>
+    <button class="tab-btn"        data-tab="friends">Amigos</button>
+    <div class="tab-ink" id="tab-ink"></div>
+  </div>
+
+  <!-- ── Content ── -->
+  <div id="content">
+    <div id="map"></div>
+
+    <div id="swipe-hint">← desliza para ver amigos</div>
+
+    <!-- Friends / Groups panel -->
+    <div id="friends-panel">
+      <div class="fp-title">Grupos</div>
+      <div id="groups-list"></div>
+    </div>
+  </div>
+
+  <!-- ── Bottom nav ── -->
+  <div id="bottom-nav-wrap">
+    <!-- Snake canvas BELOW the play button -->
+    <canvas id="snake-canvas"></canvas>
+
+    <!-- SVG curved bar background -->
+    <svg id="nav-svg" viewBox="0 0 430 90" preserveAspectRatio="none"
+         xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="shadow-nav" x="-5%" y="-40%" width="110%" height="160%">
+          <feDropShadow dx="0" dy="-2" stdDeviation="6" flood-color="rgba(0,0,0,0.10)"/>
+        </filter>
+      </defs>
+      <!--
+        Path description (viewBox 430×90):
+        M 0,90 → start bottom-left
+        L 0,28 → up to nav top on left
+        L 155,28 → flat section left of notch
+        Q 180,28 185,8 → start curving up into notch
+        Q 197,0  215,0 → peak of notch arc (top)
+        Q 233,0  245,8 → other side peak
+        Q 250,28 275,28 → curve back down to nav level
+        L 430,28 → flat section right of notch
+        L 430,90 → bottom-right
+        Z → close
+      -->
+      <path id="nav-path-bg"
+        d="M 0,90 L 0,28 L 155,28 Q 180,28 185,8 Q 197,0 215,0 Q 233,0 245,8 Q 250,28 275,28 L 430,28 L 430,90 Z"
+        fill="white"
+        filter="url(#shadow-nav)"
+      />
+    </svg>
+
+    <!-- Nav buttons -->
+    <div id="nav-buttons">
+      <button class="nav-btn active" data-tab="general" id="nav-home">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span class="nav-label">Mapa</span>
+      </button>
+      <div class="nav-center"></div>
+      <button class="nav-btn" data-tab="leaderboard" id="nav-top">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="18" y="3"  width="4" height="18"/>
+          <rect x="10" y="8"  width="4" height="13"/>
+          <rect x="2"  y="13" width="4" height="8"/>
+        </svg>
+        <span class="nav-label">Top</span>
+      </button>
+    </div>
+
+    <!-- PLAY button -->
+    <button id="play-btn">PLAY</button>
+  </div>
+
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ─────────────────────────────────────────────────
+   DATA (hardcoded backend simulation)
+───────────────────────────────────────────────── */
+const GROUPS = [
+  { id:1, name:'Corredores UB',    emoji:'🏫', members:12, activeNow:3, joined:false },
+  { id:2, name:'Amigos del Barrio',emoji:'🏘️', members:5,  activeNow:2, joined:true  },
+  { id:3, name:'Snake Masters',    emoji:'🐍', members:8,  activeNow:5, joined:false },
+  { id:4, name:'Night Runners',    emoji:'🌙', members:15, activeNow:0, joined:false },
+  { id:5, name:'Campus Sprint',    emoji:'⚡', members:20, activeNow:7, joined:false },
+]
+
+const MAP_PLAYERS = [
+  { name:'Jiajun',      color:'#E67E22', lat:41.3867, lng:2.1698 },
+  { name:'Alicia',      color:'#2980B9', lat:41.3855, lng:2.1650 },
+  { name:'SpeedMaster', color:'#E74C3C', lat:41.3895, lng:2.1720 },
+  { name:'GreenMamba',  color:'#27AE60', lat:41.3840, lng:2.1670 },
+  { name:'RunnerX',     color:'#8E44AD', lat:41.3875, lng:2.1635 },
+]
+
+/* ─────────────────────────────────────────────────
+   MAP INIT (Leaflet + OpenStreetMap)
+───────────────────────────────────────────────── */
+const map = L.map('map', {
+  center: [41.3870, 2.1680],
+  zoom: 16,
+  zoomControl: false,
+  attributionControl: true,
+})
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom: 19,
+}).addTo(map)
+
+/* player snake markers */
+const markerObjects = []
+
+MAP_PLAYERS.forEach(p => {
+  const el = document.createElement('div')
+  el.className = 'player-marker'
+  el.style.borderColor = p.color
+  el.style.color = p.color
+  el.textContent = p.name.charAt(0)
+  el.title = p.name
+
+  const marker = L.marker([p.lat, p.lng], {
+    icon: L.divIcon({ html: el, className: '', iconSize: [28,28], iconAnchor:[14,14] })
+  }).addTo(map)
+
+  // Add a tooltip
+  marker.bindTooltip(`<b>${p.name}</b>`, { permanent: false, direction: 'top', offset:[0,-16] })
+
+  markerObjects.push({ marker, lat: p.lat, lng: p.lng, dlat: (Math.random()-.5)*.00008, dlng: (Math.random()-.5)*.00010, color: p.color })
+})
+
+/* animate player markers along streets (approximate random walk) */
+setInterval(() => {
+  markerObjects.forEach(m => {
+    m.lat += m.dlat
+    m.lng += m.dlng
+    if (m.lat > 41.395 || m.lat < 41.380) m.dlat *= -1
+    if (m.lng > 2.178  || m.lng < 2.158)  m.dlng *= -1
+    m.marker.setLatLng([m.lat, m.lng])
+  })
+}, 600)
+
+/* ─────────────────────────────────────────────────
+   GROUPS LIST RENDER
+───────────────────────────────────────────────── */
+const groupsList = document.getElementById('groups-list')
+
+function renderGroups () {
+  groupsList.innerHTML = ''
+  GROUPS.forEach(g => {
+    const card = document.createElement('div')
+    card.className = 'group-card'
+    card.innerHTML = `
+      <div class="gc-emoji">${g.emoji}</div>
+      <div class="gc-info">
+        <div class="gc-name">${g.name}</div>
+        <div class="gc-meta">
+          <span>👥 ${g.members}</span>
+          <span class="${g.activeNow > 0 ? 'gc-active' : ''}">
+            ${g.activeNow > 0 ? '● '+g.activeNow+' activos' : '○ inactivo'}
+          </span>
+        </div>
+      </div>
+      <button class="join-btn ${g.joined ? 'joined':''}" data-id="${g.id}">
+        ${g.joined ? 'Salir' : 'Unirse'}
+      </button>
+    `
+    card.querySelector('.join-btn').addEventListener('click', () => {
+      g.joined = !g.joined
+      renderGroups()
+    })
+    groupsList.appendChild(card)
+  })
+}
+renderGroups()
+
+/* ─────────────────────────────────────────────────
+   TABS + SWIPE
+───────────────────────────────────────────────── */
+const friendsPanel = document.getElementById('friends-panel')
+const tabInk       = document.getElementById('tab-ink')
+const swipeHint    = document.getElementById('swipe-hint')
+let currentTab = 'general'
+let swipeHintShown = false
+
+function setTab (tab) {
+  currentTab = tab
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
+  tabInk.style.left = tab === 'general' ? '0' : '50%'
+  friendsPanel.classList.toggle('visible', tab === 'friends')
+  // tell leaflet size may have changed
+  setTimeout(() => map.invalidateSize(), 350)
+}
+
+document.querySelectorAll('[data-tab]').forEach(el => {
+  el.addEventListener('click', () => setTab(el.dataset.tab))
+})
+
+/* swipe gesture on content area */
+const content = document.getElementById('content')
+let touchX0 = 0, mouseX0 = 0, dragging = false
+
+content.addEventListener('touchstart', e => { touchX0 = e.touches[0].clientX }, { passive:true })
+content.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchX0
+  if (Math.abs(dx) > 50) setTab(dx < 0 ? 'friends' : 'general')
+}, { passive:true })
+
+content.addEventListener('mousedown', e => { mouseX0 = e.clientX; dragging = true })
+window.addEventListener('mouseup', e => {
+  if (!dragging) return
+  dragging = false
+  const dx = e.clientX - mouseX0
+  if (Math.abs(dx) > 50) setTab(dx < 0 ? 'friends' : 'general')
+})
+
+// Show swipe hint once after 1.5 s
+setTimeout(() => {
+  if (!swipeHintShown) {
+    swipeHintShown = true
+    swipeHint.classList.add('show')
+    setTimeout(() => swipeHint.classList.remove('show'), 2800)
+  }
+}, 1500)
+
+/* ─────────────────────────────────────────────────
+   PLAY BUTTON
+───────────────────────────────────────────────── */
+document.getElementById('play-btn').addEventListener('click', () => {
+  alert('¡Partida iniciada! (En el prototipo Vue, esto abre /game)')
+})
+
+document.getElementById('avatar-btn').addEventListener('click', () => {
+  alert('Perfil de usuario (En el prototipo Vue, esto abre /profile)')
+})
+
+/* ─────────────────────────────────────────────────
+   SNAKE ANIMATION along the nav-bar silhouette
+   
+   Path points mirror the SVG nav path (viewBox 430×90).
+   We convert them to canvas pixel coords at runtime.
+   The snake follows the exact top edge of the bar.
+───────────────────────────────────────────────── */
+const canvas  = document.getElementById('snake-canvas')
+const ctx     = canvas.getContext('2d')
+
+// The top-edge silhouette of the nav bar in SVG viewBox coords (430×90).
+// We sample many points along the path with a hidden SVG path element.
+const pathDescTop = "M 0,28 L 155,28 Q 180,28 185,8 Q 197,0 215,0 Q 233,0 245,8 Q 250,28 275,28 L 430,28"
+
+// Build a hidden SVG to sample the path
+const svgNS = 'http://www.w3.org/2000/svg'
+const helperSvg  = document.createElementNS(svgNS,'svg')
+helperSvg.setAttribute('style','position:absolute;opacity:0;pointer-events:none;width:0;height:0')
+const helperPath = document.createElementNS(svgNS,'path')
+helperPath.setAttribute('d', pathDescTop)
+helperSvg.appendChild(helperPath)
+document.body.appendChild(helperSvg)
+
+const PATH_LEN     = helperPath.getTotalLength()
+const SAMPLE_COUNT = 500
+const pathPoints   = []  // will be filled on resize
+
+function buildPathPoints () {
+  const W = canvas.width
+  const H = canvas.height
+  const scaleX = W / 430
+  const scaleY = H / 90
+  pathPoints.length = 0
+  for (let i = 0; i <= SAMPLE_COUNT; i++) {
+    const t = (i / SAMPLE_COUNT) * PATH_LEN
+    const p = helperPath.getPointAtLength(t)
+    pathPoints.push({ x: p.x * scaleX, y: p.y * scaleY })
+  }
+}
+
+function resizeCanvas () {
+  canvas.width  = canvas.offsetWidth
+  canvas.height = canvas.offsetHeight
+  buildPathPoints()
+}
+
+window.addEventListener('resize', resizeCanvas)
+// Delay first resize until layout is stable
+setTimeout(resizeCanvas, 100)
+
+/* ── Snake state ── */
+const SEG_RADIUS = 6     // px radius of each circle segment
+const SEG_GAP    = 14    // distance between segment centers along path
+const BODY_LEN   = 10    // number of body segments (+ head)
+const SPEED      = 0.6   // path units advanced per frame (in SAMPLE_COUNT space)
+
+let headIdx  = 0          // current index in pathPoints
+let apples   = []         // { idx, eaten }
+
+function spawnApple () {
+  // Place apple somewhere on the path, not in the notch zone
+  let idx
+  do { idx = Math.floor(Math.random() * (SAMPLE_COUNT + 1)) }
+  while (idx > 120 && idx < 380) // avoid the notch itself
+  apples.push({ idx, eaten: false })
+}
+
+for (let i = 0; i < 5; i++) spawnApple()
+
+let extraSegs   = 0    // bonus segments from eating
+let frameExtra  = 0    // fractional advance accumulator
+
+function drawSegment (x, y, r, fill, isHead) {
+  ctx.beginPath()
+  ctx.arc(x, y, r, 0, Math.PI * 2)
+  ctx.fillStyle = fill
+  ctx.fill()
+
+  if (isHead) {
+    // Eyes (offset slightly toward direction of motion)
+    const eyeR = r * 0.28
+    const dx   = (pathPoints[Math.min(headIdx+1, SAMPLE_COUNT)].x - pathPoints[Math.max(headIdx-1,0)].x)
+    const dy   = (pathPoints[Math.min(headIdx+1, SAMPLE_COUNT)].y - pathPoints[Math.max(headIdx-1,0)].y)
+    const len  = Math.hypot(dx, dy) || 1
+    const nx   = dx/len, ny = dy/len       // forward unit vector
+    const px   = -ny,    py = nx           // perpendicular
+
+    // two eyes, left and right of forward direction
+    [[.45, -.45],[.45, .45]].forEach(([fa, pa]) => {
+      const ex = x + nx*r*fa + px*r*pa
+      const ey = y + ny*r*fa + py*r*pa
+      ctx.beginPath()
+      ctx.arc(ex, ey, eyeR, 0, Math.PI*2)
+      ctx.fillStyle = '#fff'
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(ex + nx*eyeR*.4, ey + ny*eyeR*.4, eyeR*.55, 0, Math.PI*2)
+      ctx.fillStyle = '#1a1a1a'
+      ctx.fill()
+    })
+  }
+}
+
+function snakeLoop () {
+  requestAnimationFrame(snakeLoop)
+  if (!pathPoints.length) return
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  // Advance head
+  headIdx = (headIdx + SPEED) % (SAMPLE_COUNT + 1)
+
+  // Check apple collisions
+  apples.forEach(a => {
+    if (!a.eaten) {
+      const dist = Math.hypot(
+        pathPoints[Math.round(headIdx)].x - pathPoints[a.idx].x,
+        pathPoints[Math.round(headIdx)].y - pathPoints[a.idx].y
+      )
+      if (dist < SEG_RADIUS * 2.2) {
+        a.eaten = true
+        extraSegs = Math.min(extraSegs + 3, 12)
+        setTimeout(() => spawnApple(), 800)
+      }
+    }
+  })
+
+  const totalSegs = BODY_LEN + extraSegs
+
+  // Draw apples
+  apples.filter(a => !a.eaten).forEach(a => {
+    const pt = pathPoints[a.idx]
+    // apple body
+    ctx.beginPath()
+    ctx.arc(pt.x, pt.y, SEG_RADIUS * 0.85, 0, Math.PI*2)
+    ctx.fillStyle = '#e74c3c'
+    ctx.fill()
+    // shine
+    ctx.beginPath()
+    ctx.arc(pt.x - SEG_RADIUS*.25, pt.y - SEG_RADIUS*.25, SEG_RADIUS*.28, 0, Math.PI*2)
+    ctx.fillStyle = 'rgba(255,255,255,.6)'
+    ctx.fill()
+    // stem
+    ctx.strokeStyle = '#27AE60'
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    ctx.moveTo(pt.x, pt.y - SEG_RADIUS * .85)
+    ctx.lineTo(pt.x + 2, pt.y - SEG_RADIUS * 1.4)
+    ctx.stroke()
+  })
+
+  // Draw body segments (from tail to head, so head is drawn on top)
+  for (let s = totalSegs; s >= 0; s--) {
+    const segIdx = ((headIdx - s * (SEG_GAP / (canvas.width / SAMPLE_COUNT * 1.1))) % (SAMPLE_COUNT+1) + SAMPLE_COUNT+1) % (SAMPLE_COUNT+1)
+    const pt = pathPoints[Math.round(segIdx)]
+    if (!pt) continue
+
+    const isHead  = s === 0
+    const t       = s / totalSegs                       // 0=head,1=tail
+    const r       = isHead ? SEG_RADIUS * 1.25 : SEG_RADIUS * (1 - t*.18)
+
+    // Color: green gradient head→tail
+    const g = Math.round(158 - t * 60)
+    const fill = `rgb(45,${g},45)`
+
+    drawSegment(pt.x, pt.y, r, fill, isHead)
+  }
+}
+
+snakeLoop()
+</script>
+</body>
+</html>

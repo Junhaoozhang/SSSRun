@@ -1,0 +1,48 @@
+// Simulated backend data – friend groups
+export const groups = [
+  {
+    id: 1,
+    name: 'Corredores UB',
+    emoji: '🏫',
+    members: 12,
+    activeNow: 3,
+    topScore: 52000,
+    joined: false,
+  },
+  {
+    id: 2,
+    name: 'Amigos del Barrio',
+    emoji: '🏘️',
+    members: 5,
+    activeNow: 2,
+    topScore: 31000,
+    joined: true,
+  },
+  {
+    id: 3,
+    name: 'Snake Masters',
+    emoji: '🐍',
+    members: 8,
+    activeNow: 5,
+    topScore: 89000,
+    joined: false,
+  },
+  {
+    id: 4,
+    name: 'Night Runners',
+    emoji: '🌙',
+    members: 15,
+    activeNow: 0,
+    topScore: 45000,
+    joined: false,
+  },
+  {
+    id: 5,
+    name: 'Campus Sprint',
+    emoji: '⚡',
+    members: 20,
+    activeNow: 7,
+    topScore: 118000,
+    joined: false,
+  },
+]
