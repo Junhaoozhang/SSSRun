@@ -1,8 +1,11 @@
 <template>
   <div class="d-flex flex-column overflow-hidden h-100" style="background:#f4f4f6">
 
-    <!-- Scope toggle + filter button -->
+    <!-- Header with Scope toggle + filter button -->
     <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white border-bottom flex-shrink-0">
+      <button class="btn btn-sm btn-light border flex-shrink-0" style="width:36px;height:36px;padding:0" @click="$router.back()" title="Atrás">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </button>
       <div class="btn-group flex-grow-1" role="group">
         <input type="radio" class="btn-check" id="scope-global" autocomplete="off"
                v-model="scope" value="global">

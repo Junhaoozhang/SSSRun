@@ -6,20 +6,9 @@
     <canvas ref="canvasRef" class="snake-canvas" />
 
     <!--
-      SVG curved nav bar — viewBox 430 × 88
-      ──────────────────────────────────────
-      Flat nav top    → y = 28
-      PLAY btn ⌀ 72   → bottom:12 → centre y = 88-12-36 = 40
-      Notch apex      → y = 4  (= button top edge: 40-36 = 4)
-      Notch half-width = 36 → x 179 … 251
-
-      Fill path:
-        M 0,88 L 0,28 L 179,28
-        Q 196,4 215,4  ← left Bézier up
-        Q 234,4 251,28 ← right Bézier down
-        L 430,28 L 430,88 Z
+      SVG curved nav bar
     -->
-    <svg class="nav-svg" viewBox="0 0 430 88" preserveAspectRatio="none"
+    <svg class="nav-svg" :viewBox="`0 0 ${containerWidth} 88`" preserveAspectRatio="none"
          xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id="nav-sh" x="-2%" y="-80%" width="104%" height="220%">
@@ -27,10 +16,7 @@
                         flood-color="rgba(0,0,0,0.08)" />
         </filter>
       </defs>
-      <path
-        d="M 0,88 L 0,28 L 179,28 Q 196,4 215,4 Q 234,4 251,28 L 430,28 L 430,88 Z"
-        fill="white" filter="url(#nav-sh)"
-      />
+      <path :d="navPathD" fill="white" filter="url(#nav-sh)" />
     </svg>
 
     <!-- Nav buttons -->
@@ -74,17 +60,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 defineProps({ activeTab: { type: String, default: 'map' } })
 defineEmits(['tab-change', 'play'])
 
-/* ─── Snake animation ─────────────────────────────────────────────────
-   Path mirrors the SVG notch top edge (viewBox 430 × 88):
-     M 0,28 L 179,28 Q 196,4 215,4 Q 234,4 251,28 L 430,28
-─────────────────────────────────────────────────────────────────────── */
+const containerWidth = ref(430)
+
+const navPathD = computed(() => {
+  const w = containerWidth.value
+  const c = w / 2
+  return `M 0,88 L 0,28 L ${c-36},28 Q ${c-19},4 ${c},4 Q ${c+19},4 ${c+36},28 L ${w},28 L ${w},88 Z`
+})
+
+const snakePathD = computed(() => {
+  const w = containerWidth.value
+  const c = w / 2
+  return `M 0,28 L ${c-36},28 Q ${c-19},4 ${c},4 Q ${c+19},4 ${c+36},28 L ${w},28`
+})
+
 const canvasRef = ref(null)
-const SNAKE_PATH_D = 'M 0,28 L 179,28 Q 196,4 215,4 Q 234,4 251,28 L 430,28'
 const N_SAMPLES = 700
 const HEAD_R    = 10
 const BODY_W    = 14   // width of the body block (polyline stroke)
@@ -103,25 +98,25 @@ let apples    = []
 let rafId     = null
 
 function buildHelperPath () {
-  const NS   = 'http://www.w3.org/2000/svg'
-  const hsvg = document.createElementNS(NS, 'svg')
-  hsvg.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none;overflow:hidden'
-  hpath = document.createElementNS(NS, 'path')
-  hpath.setAttribute('d', SNAKE_PATH_D)
-  hsvg.appendChild(hpath)
-  document.body.appendChild(hsvg)
+  const NS = 'http://www.w3.org/2000/svg'
+  if (!hpath) {
+    const hsvg = document.createElementNS(NS, 'svg')
+    hsvg.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none;overflow:hidden'
+    hpath = document.createElementNS(NS, 'path')
+    hsvg.appendChild(hpath)
+    document.body.appendChild(hsvg)
+  }
+  hpath.setAttribute('d', snakePathD.value)
   totalLen = hpath.getTotalLength()
 }
 
 function buildPath () {
   const canvas = canvasRef.value
-  const sx = canvas.width / 430
   const dy = canvas.height - 88   // canvas extends this many px above nav area
   pathPts = []
   for (let i = 0; i <= N_SAMPLES; i++) {
     const p = hpath.getPointAtLength((i / N_SAMPLES) * totalLen)
-    // SVG y is in 0-88 space; canvas top is `dy` px above nav top, so shift down
-    pathPts.push({ x: p.x * sx, y: p.y + dy })
+    pathPts.push({ x: p.x, y: p.y + dy })
   }
   let totalPx = 0
   for (let i = 1; i < pathPts.length; i++)
@@ -132,8 +127,11 @@ function buildPath () {
 function resizeCanvas () {
   const canvas = canvasRef.value
   if (!canvas) return
-  canvas.width  = canvas.offsetWidth  || 430
+  const w = canvas.offsetWidth || 430
+  containerWidth.value = w
+  canvas.width  = w
   canvas.height = canvas.offsetHeight || 88
+  buildHelperPath()
   buildPath()
 }
 
@@ -285,8 +283,7 @@ function loop () {
 
 onMounted(() => {
   ctx = canvasRef.value.getContext('2d')
-  buildHelperPath()
-  resizeCanvas()
+  resizeCanvas() // This handles both containerWidth sizing and buildHelperPath
   setTimeout(resizeCanvas, 350)
   window.addEventListener('resize', resizeCanvas)
   tailBonus = 0

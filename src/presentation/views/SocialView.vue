@@ -1,23 +1,28 @@
 <template>
-  <div class="social-view">
-    <!-- Tab bar -->
-    <div class="tab-bar">
-      <button
-        class="tab-btn"
-        :class="{ 'tab-active': activeTab === 'friends' }"
-        @click="activeTab = 'friends'"
-      >
-        Amigos
-        <span v-if="onlineCount" class="online-badge">{{ onlineCount }}</span>
+  <div class="social-view flex-column d-flex h-100">
+    <!-- Header with Back Button -->
+    <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white border-bottom flex-shrink-0" style="color: #000;">
+      <button class="btn btn-sm btn-light border flex-shrink-0" style="width:36px;height:36px;padding:0" @click="$router.back()" title="Atrás">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
       </button>
-      <button
-        class="tab-btn"
-        :class="{ 'tab-active': activeTab === 'groups' }"
-        @click="activeTab = 'groups'"
-      >
-        Grupos
-      </button>
-      <div class="tab-indicator" :style="indicatorStyle" />
+      <div class="tab-bar flex-grow-1" style="margin: 0; padding: 0; border: none; background: transparent;">
+        <button
+          class="tab-btn"
+          :class="{ 'tab-active': activeTab === 'friends' }"
+          @click="activeTab = 'friends'"
+        >
+          Amigos
+          <span v-if="onlineCount" class="online-badge">{{ onlineCount }}</span>
+        </button>
+        <button
+          class="tab-btn"
+          :class="{ 'tab-active': activeTab === 'groups' }"
+          @click="activeTab = 'groups'"
+        >
+          Grupos
+        </button>
+        <div class="tab-indicator" :style="indicatorStyle" />
+      </div>
     </div>
 
     <!-- Friends list -->

@@ -619,16 +619,27 @@ const USER_WPTS = [[41.3892,2.1637],[41.3870,2.1637],[41.3870,2.1665],[41.3892,2
 let userRoutePts = []
 let userState    = null
 let userInterval = null
+let resizeTimeout = null
+
+function onMapResize() {
+  if (resizeTimeout) clearTimeout(resizeTimeout)
+  resizeTimeout = setTimeout(() => {
+    leafletMap?.invalidateSize()
+  }, 100)
+}
 
 async function initMap () {
   leafletMap = L.map(mapRef.value, {
     center: [41.3892, 2.1651], zoom: 16,
     zoomControl: false, attributionControl: true,
   })
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+  L.tileLayer(
+  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  {
+    attribution: '© OSM, © CARTO',
     maxZoom: 19,
-  }).addTo(leafletMap)
+  }
+).addTo(leafletMap)
 
   const allFetched = await Promise.all([
     ...PLAYER_DEFS.map(p => fetchStreetRoute(p.wpts)),
@@ -782,11 +793,14 @@ watch(playMode, (on) => {
 
 onMounted(async () => {
   await initMap()
+  window.addEventListener('resize', onMapResize)
 })
 
 onUnmounted(() => {
   clearInterval(walkInterval)
   clearInterval(userInterval)
+  window.removeEventListener('resize', onMapResize)
+  if (resizeTimeout) clearTimeout(resizeTimeout)
   if (userState) { userState.marker.remove(); userState.poly.remove() }
   foods.forEach(f => { if (!f.eaten) f.marker.remove() })
   leafletMap?.remove()
