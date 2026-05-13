@@ -1,8 +1,8 @@
 <template>
   <div class="home-view" :class="{ 'play-mode': playMode }">
 
-    <!-- ── Top tabs: General / Amigos ── -->
-    <div class="tabs" v-if="!playMode">
+    <!-- ── Top tabs: General / Grupos (hidden while friends panel is open) ── -->
+    <div class="tabs" v-if="!playMode && navTab !== 'friends'">
       <div class="tab-pill-wrap">
         <button class="tab-pill" :class="{ active: tab === 'general' }" @click="tab = 'general'">
           General
@@ -82,75 +82,237 @@
         </div>
       </Transition>
 
-      <!-- Friends panel (Amigos tab from nav) -->
+      <!-- Friends + Groups panel (slides in from nav "Amigos" button) -->
       <div class="side-panel" :class="{ visible: navTab === 'friends' && !playMode }">
-        <div class="fp-section" style="padding-top: 18px">
-          <div class="fp-title">En línea ahora</div>
-          <div v-for="f in sortedFriends" :key="f.id" class="friend-card">
-            <div class="fa-wrap">
-              <div class="fa-circle"
-                   :style="{ background: f.color + '18', borderColor: f.color, color: f.color }">
-                {{ f.name.charAt(0) }}
-              </div>
-              <div class="online-dot" :class="{ off: !f.isOnline }" />
-            </div>
-            <div class="fi">
-              <div class="fi-name">{{ f.name }}</div>
-              <div class="fi-sub">
-                <span>Nv.{{ f.level }}</span>
-                <span :style="{ color: f.isOnline ? '#2ecc71' : '#bbb' }">
-                  {{ f.isOnline ? '● Jugando' : '○ Offline' }}
-                </span>
-              </div>
-            </div>
-            <div class="chips">
-              <div class="chip">🍎 {{ f.food }}</div>
-              <div class="chip">⚡ {{ f.speed }}</div>
-            </div>
-          </div>
+        <!-- Nav tabs: Amigos / Grupos -->
+        <div class="bg-white border-bottom flex-shrink-0">
+          <ul class="nav nav-tabs px-3 pt-2 border-0">
+            <li class="nav-item flex-fill text-center">
+              <button class="nav-link w-100 fw-bold border-0"
+                      :class="{ active: friendTab === 'amigos' }"
+                      @click="friendTab = 'amigos'">Amigos</button>
+            </li>
+            <li class="nav-item flex-fill text-center">
+              <button class="nav-link w-100 fw-bold border-0"
+                      :class="{ active: friendTab === 'grupos' }"
+                      @click="friendTab = 'grupos'">Grupos</button>
+            </li>
+          </ul>
         </div>
 
-        <div class="fp-section" style="margin-top: 6px; padding-bottom: 24px">
-          <div class="fp-title">Grupos</div>
-          <div v-for="g in groups" :key="g.id" class="group-card">
-            <div class="gc-emoji">{{ g.emoji }}</div>
-            <div class="gc-info">
-              <div class="gc-name">{{ g.name }}</div>
-              <div class="gc-meta">
-                <span>👥 {{ g.members }}</span>
-                <span :class="{ 'gc-active': g.activeNow > 0 }">
-                  {{ g.activeNow > 0 ? `● ${g.activeNow} activos` : '○ inactivo' }}
-                </span>
+        <!-- Amigos list -->
+        <div v-if="friendTab === 'amigos'" class="overflow-auto flex-grow-1 p-3">
+          <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">
+            Amigos ({{ sortedFriends.length }})
+          </p>
+          <div class="list-group mb-4">
+            <div v-for="f in sortedFriends" :key="f.id"
+                 class="list-group-item d-flex align-items-center gap-3 py-2 px-3">
+              <div class="position-relative flex-shrink-0">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-black"
+                     :style="{ width:'40px', height:'40px', background: f.color+'18', border:'2.5px solid '+f.color, color:f.color, fontSize:'16px' }">
+                  {{ f.name.charAt(0) }}
+                </div>
+                <span class="position-absolute rounded-circle border border-2 border-white"
+                      :style="{ width:'11px', height:'11px', background: f.isOnline ? '#2ecc71' : '#ccc', bottom:0, right:0, display:'block' }"></span>
+              </div>
+              <div class="flex-grow-1 min-width-0">
+                <div class="fw-bold text-truncate" style="font-size:14px">{{ f.name }}</div>
+                <small class="text-muted">Nv.{{ f.level }} ·
+                  <span :style="{ color: f.isOnline ? '#2ecc71' : '#bbb' }">
+                    {{ f.isOnline ? '● Jugando' : '○ Offline' }}
+                  </span>
+                </small>
+              </div>
+              <span class="badge border fw-semibold flex-shrink-0"
+                    style="background:#f4f4f6;color:#444;font-size:11px">🍎 {{ f.food }}</span>
+              <button class="btn btn-sm btn-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                      style="width:28px;height:28px;font-size:11px;padding:0"
+                      @click="removeFriend(f.id)" title="Eliminar amigo">✕</button>
+            </div>
+          </div>
+
+          <p class="text-uppercase fw-bold mb-2 mt-1" style="font-size:10px;color:#aaa;letter-spacing:.8px">
+            Añadir amigos
+          </p>
+          <div class="list-group">
+            <div v-for="f in nonFriends" :key="'nf-'+f.id"
+                 class="list-group-item d-flex align-items-center gap-3 py-2 px-3"
+                 style="opacity:.85">
+              <div class="rounded-circle d-flex align-items-center justify-content-center fw-black flex-shrink-0"
+                   :style="{ width:'40px', height:'40px', background: f.color+'18', border:'2.5px solid '+f.color, color:f.color, fontSize:'16px' }">
+                {{ f.name.charAt(0) }}
+              </div>
+              <div class="flex-grow-1 min-width-0">
+                <div class="fw-bold text-truncate" style="font-size:14px">{{ f.name }}</div>
+                <small class="text-muted">Nv.{{ f.level }}</small>
+              </div>
+              <button class="btn btn-sm btn-outline-success rounded-pill fw-bold flex-shrink-0"
+                      @click="addFriend(f.id)">+ Añadir</button>
+            </div>
+          </div>
+          <p v-if="nonFriends.length === 0" class="text-center text-muted py-3 small">
+            ¡Ya sigues a todos!
+          </p>
+        </div>
+
+        <!-- Grupos list -->
+        <div v-if="friendTab === 'grupos'" class="overflow-auto flex-grow-1 p-3 pb-4">
+
+          <!-- ── Group management detail ── -->
+          <template v-if="managingGroup">
+            <button class="btn btn-link p-0 fw-bold text-success mb-3 text-decoration-none"
+                    @click="managingGroup = null">← Volver</button>
+            <div class="card rounded-4 border mb-3">
+              <div class="card-body d-flex align-items-center gap-3 py-3">
+                <span style="font-size:30px">{{ managingGroup.emoji }}</span>
+                <div>
+                  <div class="fw-black" style="font-size:16px">{{ managingGroup.name }}</div>
+                  <small class="text-muted">
+                    {{ groupMemberCount(managingGroup.id) }} miembro{{ groupMemberCount(managingGroup.id) !== 1 ? 's' : '' }}
+                  </small>
+                </div>
               </div>
             </div>
-            <button class="join-btn" :class="{ joined: g.joined }" @click="toggleJoin(g.id)">
-              {{ g.joined ? 'Salir' : 'Unirse' }}
+
+            <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">Miembros</p>
+            <p v-if="groupMembers(managingGroup.id).length === 0"
+               class="text-center text-muted small py-2">Sin miembros aún</p>
+            <div class="list-group mb-3">
+              <div v-for="p in groupMembers(managingGroup.id)" :key="'gm-'+p.id"
+                   class="list-group-item d-flex align-items-center gap-3 py-2 px-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-black flex-shrink-0"
+                     :style="{ width:'36px', height:'36px', background: p.color+'18', border:'2px solid '+p.color, color:p.color, fontSize:'14px' }">
+                  {{ p.name.charAt(0) }}
+                </div>
+                <div class="fw-semibold flex-grow-1 text-truncate" style="font-size:14px">{{ p.name }}</div>
+                <small class="text-muted flex-shrink-0">Nv.{{ p.level }}</small>
+                <button class="btn btn-sm btn-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                        style="width:28px;height:28px;font-size:11px;padding:0"
+                        @click="removeMemberFromGroup(managingGroup.id, p.id)">✕</button>
+              </div>
+            </div>
+
+            <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">Añadir miembros</p>
+            <p v-if="nonGroupMembers(managingGroup.id).length === 0"
+               class="text-center text-muted small py-2">Ya están todos</p>
+            <div class="list-group mb-3">
+              <div v-for="p in nonGroupMembers(managingGroup.id)" :key="'ngm-'+p.id"
+                   class="list-group-item d-flex align-items-center gap-3 py-2 px-3"
+                   style="opacity:.85">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-black flex-shrink-0"
+                     :style="{ width:'36px', height:'36px', background: p.color+'18', border:'2px solid '+p.color, color:p.color, fontSize:'14px' }">
+                  {{ p.name.charAt(0) }}
+                </div>
+                <div class="fw-semibold flex-grow-1 text-truncate" style="font-size:14px">{{ p.name }}</div>
+                <small class="text-muted flex-shrink-0">Nv.{{ p.level }}</small>
+                <button class="btn btn-sm btn-outline-success rounded-pill fw-bold flex-shrink-0"
+                        @click="addMemberToGroup(managingGroup.id, p.id)">+ Añadir</button>
+              </div>
+            </div>
+
+            <button class="btn btn-outline-danger w-100 rounded-3 fw-bold py-3 mt-2"
+                    @click="toggleJoin(managingGroup.id); managingGroup = null">
+              Salir del grupo
             </button>
-          </div>
+          </template>
+
+          <!-- ── Groups list ── -->
+          <template v-else>
+            <button v-if="!showCreateGroup"
+                    class="btn w-100 fw-bold rounded-3 mb-3 py-3"
+                    style="border:1.5px dashed #2a9e2a;background:#f0fdf0;color:#2a9e2a"
+                    @click="showCreateGroup = true">+ Crear grupo</button>
+
+            <!-- Create group form -->
+            <div v-else class="card rounded-4 border mb-3">
+              <div class="card-body p-3">
+                <p class="fw-bold mb-3">Nuevo grupo</p>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                  <button v-for="e in GROUP_EMOJIS" :key="e"
+                          class="btn btn-sm rounded-3 p-1"
+                          :class="newGroupEmoji === e ? 'btn-success' : 'btn-light border'"
+                          style="width:36px;height:36px;font-size:17px"
+                          @click="newGroupEmoji = e">{{ e }}</button>
+                </div>
+                <input v-model="newGroupName" class="form-control mb-3"
+                       placeholder="Nombre del grupo" maxlength="24" />
+                <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.7px">
+                  Invitar jugadores
+                </p>
+                <div class="border rounded-3 overflow-hidden mb-3" style="max-height:180px;overflow-y:auto!important">
+                  <button v-for="p in ALL_PLAYERS" :key="'cgm-'+p.id"
+                          class="w-100 d-flex align-items-center gap-3 px-3 py-2 border-0 text-start"
+                          :class="newGroupMemberIds.has(p.id) ? 'bg-success bg-opacity-10' : 'bg-white'"
+                          @click="toggleNewMember(p.id)">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-black flex-shrink-0"
+                         :style="{ width:'30px', height:'30px', background: p.color+'22', border:'2px solid '+p.color, color:p.color, fontSize:'13px' }">
+                      {{ p.name.charAt(0) }}
+                    </div>
+                    <span class="flex-grow-1 fw-semibold" style="font-size:13px">{{ p.name }}</span>
+                    <span class="fw-black text-success" style="width:16px">{{ newGroupMemberIds.has(p.id) ? '✓' : '' }}</span>
+                  </button>
+                </div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-light border flex-fill fw-semibold" @click="cancelCreateGroup">Cancelar</button>
+                  <button class="btn btn-success flex-fill fw-bold"
+                          :disabled="!newGroupName.trim()" @click="submitCreateGroup">Crear</button>
+                </div>
+              </div>
+            </div>
+
+            <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">
+              Todos los grupos
+            </p>
+            <div class="list-group">
+              <div v-for="g in groups" :key="g.id"
+                   class="list-group-item d-flex align-items-center gap-3 py-2 px-3">
+                <span style="font-size:24px;flex-shrink:0">{{ g.emoji }}</span>
+                <div class="flex-grow-1 min-width-0">
+                  <div class="fw-bold text-truncate" style="font-size:14px">{{ g.name }}</div>
+                  <small class="text-muted">
+                    👥 {{ groupMemberCount(g.id) || g.members }} ·
+                    <span :class="g.activeNow > 0 ? 'text-success fw-semibold' : ''">
+                      {{ g.activeNow > 0 ? `● ${g.activeNow} activos` : '○ inactivo' }}
+                    </span>
+                  </small>
+                </div>
+                <button v-if="g.joined"
+                        class="btn btn-sm btn-outline-success rounded-pill fw-bold flex-shrink-0"
+                        @click="managingGroup = g">Gestionar</button>
+                <button v-else
+                        class="btn btn-sm btn-success rounded-pill fw-bold flex-shrink-0"
+                        @click="toggleJoin(g.id)">Unirse</button>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
 
       <!-- Groups tab: select group to filter map -->
       <div class="side-panel" :class="{ visible: tab === 'groups' && !playMode }">
-        <div class="fp-section" style="padding-top: 18px; padding-bottom: 24px">
-          <div class="fp-title">Filtrar por grupo</div>
-          <button
-            class="group-filter-btn"
-            :class="{ active: activeGroupFilter === null }"
-            @click="activeGroupFilter = null; tab = 'general'"
-          >
-            <span>🌍</span> Todos (General)
-          </button>
-          <button
-            v-for="g in joinedGroups"
-            :key="g.id"
-            class="group-filter-btn"
-            :class="{ active: activeGroupFilter === g.id }"
-            @click="activeGroupFilter = g.id; tab = 'general'"
-          >
-            <span>{{ g.emoji }}</span> {{ g.name }}
-            <span class="gfb-count">{{ g.members }} miembros</span>
-          </button>
+        <div class="overflow-auto p-3">
+          <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">
+            Filtrar por grupo
+          </p>
+          <div class="list-group">
+            <button class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 fw-semibold"
+                    :class="{ active: activeGroupFilter === null }"
+                    @click="activeGroupFilter = null; tab = 'general'">
+              <span style="font-size:20px">🌍</span>
+              <span>Todos (General)</span>
+            </button>
+            <button v-for="g in joinedGroups" :key="g.id"
+                    class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 fw-semibold"
+                    :class="{ active: activeGroupFilter === g.id }"
+                    @click="activeGroupFilter = g.id; tab = 'general'">
+              <span style="font-size:20px">{{ g.emoji }}</span>
+              <span class="flex-grow-1">{{ g.name }}</span>
+              <span class="badge border" style="background:#f4f4f6;color:#888;font-size:10px">
+                {{ g.members }} miembros
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -159,7 +321,6 @@
 
 <script setup>
 import { ref, computed, watch, inject, onMounted, onUnmounted } from 'vue'
-import { GetFriendsUseCase } from '@/application/usecases/GetFriendsUseCase.js'
 import { GetGroupsUseCase }  from '@/application/usecases/GetGroupsUseCase.js'
 import L from 'leaflet'
 
@@ -168,7 +329,8 @@ const playMode = inject('playMode', ref(false))
 const navTab   = inject('navTab',   ref('map'))
 
 // ── Local tab (top pill: General / Grupos) ─────────────────────────────
-const tab = ref('general')
+const tab       = ref('general')
+const friendTab = ref('amigos')  // tab inside the friends panel
 
 // ── Pause / summary state ──────────────────────────────────────────────
 const paused      = ref(false)
@@ -195,13 +357,105 @@ function closeSummary () {
 }
 
 // ── Data ───────────────────────────────────────────────────────────────
-const friends = ref(GetFriendsUseCase.execute())
-const groups  = ref(GetGroupsUseCase.execute())
+// Full pool of potential players (friends + non-friends)
+const ALL_PLAYERS = [
+  { id: 1, name: 'Jiajun',      level: 6,  score: 98000,  streak: 3,  color: '#FF6B35', isOnline: true,  food: 312, speed: 4.2 },
+  { id: 2, name: 'Alicia',      level: 8,  score: 110000, streak: 5,  color: '#00D4FF', isOnline: true,  food: 289, speed: 5.1 },
+  { id: 3, name: 'SpeedMaster', level: 12, score: 152000, streak: 14, color: '#FFD700', isOnline: false, food: 520, speed: 6.3 },
+  { id: 4, name: 'GreenMamba',  level: 4,  score: 51000,  streak: 1,  color: '#7FFF00', isOnline: false, food: 198, speed: 3.9 },
+  { id: 5, name: 'RunnerX',     level: 5,  score: 75000,  streak: 2,  color: '#FF69B4', isOnline: true,  food: 145, speed: 4.7 },
+  { id: 6, name: 'FastFoot',    level: 9,  score: 62000,  streak: 8,  color: '#9B59B6', isOnline: false, food: 404, speed: 5.8 },
+  { id: 7, name: 'SnakeKing',   level: 11, score: 118000, streak: 21, color: '#E74C3C', isOnline: true,  food: 390, speed: 5.5 },
+  { id: 8, name: 'Sprinter99',  level: 3,  score: 43000,  streak: 4,  color: '#3498DB', isOnline: false, food: 88,  speed: 3.2 },
+  { id: 9, name: 'MilesAhead',  level: 7,  score: 38000,  streak: 6,  color: '#1ABC9C', isOnline: true,  food: 210, speed: 4.0 },
+]
+const friendIds = ref(new Set([1, 2, 3, 4, 5, 6]))
+
+const friends = computed(() => ALL_PLAYERS.filter(p => friendIds.value.has(p.id)))
+const nonFriends = computed(() => ALL_PLAYERS.filter(p => !friendIds.value.has(p.id)))
 
 const sortedFriends = computed(() =>
-  [...friends.value].sort((a,b) => (a.isOnline ? 0 : 1) - (b.isOnline ? 0 : 1))
+  [...friends.value].sort((a, b) => (a.isOnline ? 0 : 1) - (b.isOnline ? 0 : 1))
 )
+
+function removeFriend (id) {
+  const s = new Set(friendIds.value)
+  s.delete(id)
+  friendIds.value = s
+}
+function addFriend (id) {
+  const s = new Set(friendIds.value)
+  s.add(id)
+  friendIds.value = s
+}
+
+const groups  = ref(GetGroupsUseCase.execute())
 const joinedGroups = computed(() => groups.value.filter(g => g.joined))
+
+// ── Per-group member tracking ──────────────────────────────────────────
+// Map<groupId, Set<playerId>>
+const groupMemberMap = ref(new Map([
+  [1, new Set([1, 5])],
+  [2, new Set([1, 2, 4])],
+  [3, new Set([3, 7])],
+  [4, new Set([6])],
+  [5, new Set([2, 5, 7])],
+]))
+
+function groupMemberCount (groupId) {
+  return groupMemberMap.value.get(groupId)?.size ?? 0
+}
+function groupMembers (groupId) {
+  const ids = groupMemberMap.value.get(groupId) ?? new Set()
+  return ALL_PLAYERS.filter(p => ids.has(p.id))
+}
+function nonGroupMembers (groupId) {
+  const ids = groupMemberMap.value.get(groupId) ?? new Set()
+  return ALL_PLAYERS.filter(p => !ids.has(p.id))
+}
+function addMemberToGroup (groupId, playerId) {
+  const map = new Map(groupMemberMap.value)
+  const s = new Set(map.get(groupId) ?? [])
+  s.add(playerId)
+  map.set(groupId, s)
+  groupMemberMap.value = map
+}
+function removeMemberFromGroup (groupId, playerId) {
+  const map = new Map(groupMemberMap.value)
+  const s = new Set(map.get(groupId) ?? [])
+  s.delete(playerId)
+  map.set(groupId, s)
+  groupMemberMap.value = map
+}
+
+// ── Create group ───────────────────────────────────────────────────────
+const GROUP_EMOJIS = ['🏃','🐍','⚡','🌙','🏫','🏘️','🔥','🏆','🚀','💪','🌿','🎯']
+const showCreateGroup  = ref(false)
+const newGroupName     = ref('')
+const newGroupEmoji    = ref('🏃')
+const newGroupMemberIds = ref(new Set())
+const managingGroup    = ref(null)
+
+function toggleNewMember (id) {
+  const s = new Set(newGroupMemberIds.value)
+  s.has(id) ? s.delete(id) : s.add(id)
+  newGroupMemberIds.value = s
+}
+function cancelCreateGroup () {
+  showCreateGroup.value = false
+  newGroupName.value = ''
+  newGroupEmoji.value = '🏃'
+  newGroupMemberIds.value = new Set()
+}
+function submitCreateGroup () {
+  if (!newGroupName.value.trim()) return
+  groups.value = GetGroupsUseCase.create({ name: newGroupName.value.trim(), emoji: newGroupEmoji.value })
+  const newId = groups.value[groups.value.length - 1].id
+  const map = new Map(groupMemberMap.value)
+  map.set(newId, new Set(newGroupMemberIds.value))
+  groupMemberMap.value = map
+  cancelCreateGroup()
+}
 
 const activeGroupFilter = ref(null)
 
@@ -321,10 +575,11 @@ function checkDanger (la, ln) {
     }
   }
 
-  // Collision: shorten the hit snake's tail
+  // Collision: shorten the hit snake's tail + suppress beeping
   if (minDist < 8 && hitState) {
     hitState.tailLen = Math.max(5, hitState.tailLen - 3)
     dangerLevel.value = 'high'
+    lastDangerBeep = Date.now() + 2000  // silence beeps for 2s after collision
     return
   }
 
@@ -714,6 +969,10 @@ onUnmounted(() => {
 .fade-enter-active, .fade-leave-active { transition: opacity .2s; }
 .fade-enter-from, .fade-leave-to       { opacity: 0; }
 
+/* ── Friends panel tabs: override Bootstrap nav-link active color ── */
+.nav-tabs .nav-link.active { color: #2a9e2a !important; border-bottom-color: #2a9e2a !important; }
+.nav-tabs .nav-link { color: #888; font-size: 14px; }
+
 /* ── Side panels (friends / groups filter) ── */
 .side-panel {
   position: absolute;
@@ -721,106 +980,12 @@ onUnmounted(() => {
   z-index: 10;
   background: rgba(250,250,252,.97);
   backdrop-filter: blur(18px);
-  overflow-y: auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
   -webkit-overflow-scrolling: touch;
   transform: translateX(100%);
   transition: transform .3s cubic-bezier(.4,0,.2,1);
 }
 .side-panel.visible { transform: translateX(0); }
-
-.fp-section { padding: 14px 16px 0; }
-.fp-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: #aaa;
-  letter-spacing: .9px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-
-/* Friend card */
-.friend-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 14px;
-  background: #fff;
-  border-radius: 14px;
-  margin-bottom: 8px;
-  border: 1px solid #ececf0;
-  box-shadow: 0 1px 3px rgba(0,0,0,.05);
-}
-.fa-wrap { position: relative; flex-shrink: 0; }
-.fa-circle {
-  width: 42px; height: 42px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 17px; font-weight: 800; border: 2.5px solid;
-}
-.online-dot {
-  position: absolute; bottom: 0; right: 0;
-  width: 11px; height: 11px; border-radius: 50%;
-  background: #2ecc71; border: 2.5px solid #fff;
-}
-.online-dot.off { background: #ccc; }
-.fi { flex: 1; min-width: 0; }
-.fi-name { font-size: 14px; font-weight: 700; color: #111; }
-.fi-sub  { font-size: 11px; color: #999; margin-top: 2px; display: flex; gap: 8px; }
-.chips   { display: flex; flex-direction: column; gap: 3px; }
-.chip {
-  background: #f4f4f6; border-radius: 8px;
-  padding: 3px 8px; font-size: 11px; font-weight: 700;
-  color: #444; text-align: right;
-}
-
-/* Group card */
-.group-card {
-  display: flex; align-items: center; gap: 12px;
-  padding: 11px 14px; background: #fff;
-  border-radius: 14px; margin-bottom: 8px;
-  border: 1px solid #ececf0;
-  box-shadow: 0 1px 3px rgba(0,0,0,.05);
-}
-.gc-emoji { font-size: 26px; flex-shrink: 0; }
-.gc-info  { flex: 1; min-width: 0; }
-.gc-name  { font-size: 14px; font-weight: 700; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.gc-meta  { font-size: 11px; color: #999; margin-top: 2px; display: flex; gap: 8px; }
-.gc-active { color: #2a9e2a; font-weight: 600; }
-.join-btn {
-  flex-shrink: 0; padding: 7px 16px; border-radius: 20px;
-  border: 1.5px solid #2a9e2a; background: transparent;
-  color: #2a9e2a; font-size: 12px; font-weight: 700;
-  cursor: pointer; font-family: 'Inter', sans-serif;
-}
-.join-btn.joined { background: #2a9e2a; color: #fff; }
-
-/* Group filter buttons (Grupos tab) */
-.group-filter-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 13px 16px;
-  background: #fff;
-  border-radius: 14px;
-  margin-bottom: 8px;
-  border: 2px solid transparent;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  box-shadow: 0 1px 3px rgba(0,0,0,.05);
-  transition: border-color .15s, background .15s;
-}
-.group-filter-btn.active {
-  border-color: #2a9e2a;
-  background: #f0fdf0;
-  color: #1a7a1a;
-}
-.gfb-count {
-  margin-left: auto;
-  font-size: 11px;
-  color: #aaa;
-  font-weight: 500;
-}
 </style>

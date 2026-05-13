@@ -1,15 +1,28 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* ── Bootstrap CSS variable overrides ───────────────────────────── */
+:root {
+  --bs-font-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
+  --bs-body-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --bs-success: #2a9e2a;
+  --bs-success-rgb: 42, 158, 42;
+  --bs-success-bg-subtle: #f0fdf0;
+  --bs-success-border-subtle: #c3e6c3;
+  --bs-border-color: #ebebef;
+  --bs-border-radius: 0.5rem;
+  --bs-border-radius-lg: 0.75rem;
+  --bs-border-radius-xl: 1rem;
 }
+
+/* ── App shell ───────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
 
 html, body {
   height: 100%;
   overflow: hidden;
   background: #e5e5ea;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #app {
@@ -24,10 +37,43 @@ html, body {
   box-shadow: 0 0 60px rgba(0,0,0,.18);
 }
 
-/* Scrollbar */
+/* ── Bootstrap btn-success uses our green ─────────────────────── */
+.btn-success {
+  --bs-btn-bg: #2a9e2a;
+  --bs-btn-border-color: #2a9e2a;
+  --bs-btn-hover-bg: #228b22;
+  --bs-btn-hover-border-color: #228b22;
+  --bs-btn-active-bg: #1a7a1a;
+  --bs-btn-disabled-bg: #8bc88b;
+  --bs-btn-disabled-border-color: #8bc88b;
+}
+.btn-outline-success {
+  --bs-btn-color: #2a9e2a;
+  --bs-btn-border-color: #2a9e2a;
+  --bs-btn-hover-bg: #2a9e2a;
+  --bs-btn-hover-border-color: #2a9e2a;
+  --bs-btn-active-bg: #228b22;
+}
+.text-success { color: #2a9e2a !important; }
+.bg-success   { background-color: #2a9e2a !important; }
+.border-success { border-color: #2a9e2a !important; }
+.bg-success-subtle  { background-color: #f0fdf0 !important; }
+.text-success-emphasis { color: #1a6e1a !important; }
+
+/* list-group active → green */
+.list-group-item.active {
+  background-color: #2a9e2a !important;
+  border-color: #2a9e2a !important;
+}
+
+/* progress-bar green */
+.progress-bar.bg-success { background-color: #2a9e2a !important; }
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(42,158,42,.25); border-radius: 2px; }
 
-/* Leaflet attribution tiny */
+/* ── Leaflet fixes ───────────────────────────────────────────────── */
 .leaflet-control-attribution { font-size: 8px !important; }
+.leaflet-pane, .leaflet-top, .leaflet-bottom { z-index: 400 !important; }

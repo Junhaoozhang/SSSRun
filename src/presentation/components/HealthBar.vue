@@ -1,18 +1,12 @@
 <template>
-  <div class="healthbar-wrap">
-    <div class="healthbar-labels">
-      <span class="hb-label">❤️ HP</span>
-      <span class="hb-value">{{ player.health }} / {{ player.maxHealth }}</span>
+  <div class="px-3 pb-2 bg-white flex-shrink-0">
+    <div class="d-flex justify-content-between mb-1">
+      <small class="fw-semibold" style="color:#999;font-size:11px">❤️ HP</small>
+      <small class="fw-semibold" style="color:#999;font-size:11px">{{ player.health }} / {{ player.maxHealth }}</small>
     </div>
-    <div class="healthbar-track">
-      <div
-        class="healthbar-fill"
-        :class="fillClass"
-        :style="{ width: healthPercent + '%' }"
-      ></div>
-      <div class="healthbar-segments">
-        <span v-for="i in 10" :key="i" class="segment" />
-      </div>
+    <div class="progress rounded-pill" style="height:6px;background:#f0f0f3">
+      <div class="progress-bar rounded-pill" :class="barClass"
+           :style="{ width: healthPercent + '%', transition: 'width .6s ease' }" />
     </div>
   </div>
 </template>
@@ -28,59 +22,14 @@ const healthPercent = computed(() =>
   Math.round((props.player.health / props.player.maxHealth) * 100)
 )
 
-const fillClass = computed(() => {
-  if (healthPercent.value > 60) return 'fill-high'
-  if (healthPercent.value > 30) return 'fill-medium'
-  return 'fill-low'
+const barClass = computed(() => {
+  if (healthPercent.value > 60) return 'bg-success'
+  if (healthPercent.value > 30) return 'bg-warning'
+  return 'bg-danger'
 })
 </script>
 
 <style scoped>
-.healthbar-wrap {
-  padding: 2px 18px 10px;
-  background: #fff;
-  flex-shrink: 0;
-}
-
-.healthbar-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.hb-label,
-.hb-value {
-  font-size: 11px;
-  font-weight: 600;
-  color: #999;
-  letter-spacing: 0.3px;
-}
-
-.healthbar-track {
-  position: relative;
-  height: 6px;
-  background: #f0f0f3;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.healthbar-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.6s ease;
-}
-
-.fill-high  { background: linear-gradient(90deg, #2a9e2a, #5cc85c); }
-.fill-medium { background: linear-gradient(90deg, #f5a623, #f0c040); }
-.fill-low {
-  background: linear-gradient(90deg, #e53935, #ef5350);
-  animation: hb-pulse 1s ease-in-out infinite;
-}
-
-@keyframes hb-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
-}
-
-.healthbar-segments { display: none; }
+.bg-danger { animation: hb-pulse 1s ease-in-out infinite; }
+@keyframes hb-pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
 </style>

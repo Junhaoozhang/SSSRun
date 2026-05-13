@@ -12,4 +12,8 @@ export const GetGroupsUseCase = {
     }
     return GroupRepository.join(groupId)
   },
+
+  create ({ name, emoji }) {
+    return GroupRepository.create({ name, emoji })
+  },
 }

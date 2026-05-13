@@ -1,55 +1,46 @@
 <template>
-  <div class="leaderboard-view">
-    <!-- Header row: toggle + filter btn -->
-    <div class="lb-header">
-      <div class="lb-toggle">
-        <button
-          class="toggle-btn"
-          :class="{ 'toggle-active': scope === 'global' }"
-          @click="scope = 'global'"
-        >🌍 Global</button>
-        <button
-          class="toggle-btn"
-          :class="{ 'toggle-active': scope === 'friends' }"
-          @click="scope = 'friends'"
-        >👥 Amigos</button>
+  <div class="d-flex flex-column overflow-hidden h-100" style="background:#f4f4f6">
+
+    <!-- Scope toggle + filter button -->
+    <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white border-bottom flex-shrink-0">
+      <div class="btn-group flex-grow-1" role="group">
+        <input type="radio" class="btn-check" id="scope-global" autocomplete="off"
+               v-model="scope" value="global">
+        <label class="btn btn-outline-success btn-sm fw-semibold" for="scope-global">🌍 Global</label>
+        <input type="radio" class="btn-check" id="scope-friends" autocomplete="off"
+               v-model="scope" value="friends">
+        <label class="btn btn-outline-success btn-sm fw-semibold" for="scope-friends">👥 Amigos</label>
       </div>
-      <button class="filter-btn" @click="filterOpen = !filterOpen">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="4"  y1="6"  x2="20" y2="6"/>
-          <line x1="8"  y1="12" x2="16" y2="12"/>
+      <button class="btn btn-sm border fw-semibold flex-shrink-0"
+              :class="filterOpen ? 'btn-success text-white' : 'btn-light'"
+              style="width:36px;height:36px;padding:0"
+              @click="filterOpen = !filterOpen">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
           <line x1="11" y1="18" x2="13" y2="18"/>
         </svg>
       </button>
     </div>
 
-    <!-- Filter panel slide-down -->
+    <!-- Filter panel -->
     <Transition name="filter-slide">
-      <div v-if="filterOpen" class="filter-panel">
-        <div class="filter-row">
-          <span class="filter-lbl">Ordenar por</span>
-          <div class="sort-pills">
-            <button
-              class="sort-pill"
-              :class="{ 'pill-active': sortBy === 'score' }"
-              @click="sortBy = 'score'"
-            >⭐ Puntos</button>
-            <button
-              class="sort-pill"
-              :class="{ 'pill-active': sortBy === 'food' }"
-              @click="sortBy = 'food'"
-            >🍎 Comida</button>
-            <button
-              class="sort-pill"
-              :class="{ 'pill-active': sortBy === 'streak' }"
-              @click="sortBy = 'streak'"
-            >🔥 Racha</button>
+      <div v-if="filterOpen" class="bg-white border-bottom px-3 pt-3 pb-3 flex-shrink-0">
+        <div class="mb-3">
+          <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">Ordenar</p>
+          <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" id="sort-score"  autocomplete="off" v-model="sortBy" value="score">
+            <label class="btn btn-outline-success btn-sm fw-semibold" for="sort-score">⭐ Puntos</label>
+            <input type="radio" class="btn-check" id="sort-food"   autocomplete="off" v-model="sortBy" value="food">
+            <label class="btn btn-outline-success btn-sm fw-semibold" for="sort-food">🍎 Comida</label>
+            <input type="radio" class="btn-check" id="sort-streak" autocomplete="off" v-model="sortBy" value="streak">
+            <label class="btn btn-outline-success btn-sm fw-semibold" for="sort-streak">🔥 Racha</label>
           </div>
         </div>
-        <div class="filter-row">
-          <span class="filter-lbl">Zona</span>
-          <select class="zone-select" v-model="zone">
+        <div>
+          <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">Zona</p>
+          <select class="form-select form-select-sm" v-model="zone">
             <option value="all">Todas las zonas</option>
             <option value="ub">Campus UB</option>
             <option value="gracia">Gràcia</option>
@@ -61,31 +52,63 @@
     </Transition>
 
     <!-- List -->
-    <div class="lb-list">
+    <div class="flex-grow-1 overflow-auto p-3">
       <Transition name="tab-slide" mode="out-in">
-        <div :key="scope" class="lb-inner">
+        <div :key="scope + sortBy" class="list-group shadow-sm">
           <div
-            v-for="entry in visibleEntries"
-            :key="entry.rank"
-            class="lb-row"
+            v-for="(entry, i) in visibleEntries"
+            :key="entry.name"
+            class="list-group-item d-flex align-items-center gap-3 py-2 px-3"
             :class="{
-              'row-gold':   entry.rank === 1,
-              'row-silver': entry.rank === 2,
-              'row-bronze': entry.rank === 3,
-              'row-me':     entry.name === currentName,
+              'lb-gold':   i === 0,
+              'lb-silver': i === 1,
+              'lb-bronze': i === 2,
+              'lb-me':     entry.name === currentName,
             }"
           >
-            <div class="rank-cell">{{ entry.avatar }}</div>
-
-            <div class="name-cell">
-              <span class="player-name">{{ entry.name }}</span>
-              <span class="streak-badge">🔥 {{ entry.streak }}d</span>
+            <!-- Rank medal / number -->
+            <div class="text-center flex-shrink-0" style="width:28px">
+              <template v-if="i < 3">
+                <span style="font-size:20px">{{ ['🥇','🥈','🥉'][i] }}</span>
+              </template>
+              <span v-else class="fw-black" style="color:#aaa;font-size:13px">{{ i + 1 }}</span>
             </div>
 
-            <div class="score-cell">
-              <span class="score-num">{{ entry.score.toLocaleString() }}</span>
-              <span class="score-unit">pts</span>
+            <!-- Avatar -->
+            <div class="rounded-circle d-flex align-items-center justify-content-center fw-black flex-shrink-0"
+                 :style="{
+                   width:'36px', height:'36px',
+                   background: entry.color + '22',
+                   color: entry.color,
+                   border: '2px solid ' + entry.color,
+                   fontSize: '14px'
+                 }">
+              {{ entry.name.charAt(0) }}
             </div>
+
+            <!-- Name + streak -->
+            <div class="flex-grow-1 min-width-0">
+              <div class="fw-bold text-truncate" style="font-size:14px">{{ entry.name }}</div>
+              <span class="badge fw-semibold border"
+                    style="font-size:10px;background:#fff5f5;color:#e74c3c;border-color:#fcc!important">
+                🔥 {{ entry.streak }}d
+              </span>
+            </div>
+
+            <!-- Score -->
+            <div class="text-end flex-shrink-0">
+              <div class="fw-black text-success" style="font-size:15px">
+                {{ displayValue(entry).toLocaleString() }}
+              </div>
+              <small class="text-muted">
+                {{ sortBy === 'score' ? 'pts' : sortBy === 'food' ? '🍎' : 'días' }}
+              </small>
+            </div>
+          </div>
+
+          <div v-if="visibleEntries.length === 0"
+               class="list-group-item text-center text-muted py-4">
+            Sin resultados para esta zona
           </div>
         </div>
       </Transition>
@@ -99,6 +122,21 @@ import { GetLeaderboardUseCase } from '@/application/usecases/GetLeaderboardUseC
 import { GetFriendsUseCase }     from '@/application/usecases/GetFriendsUseCase.js'
 import { GetPlayersUseCase }     from '@/application/usecases/GetPlayersUseCase.js'
 
+const PLAYER_COLORS = ['#E67E22','#2980B9','#E74C3C','#8E44AD','#16A085','#C0392B','#27AE60','#2C3E50']
+
+const PLAYER_ZONES = {
+  'SpeedMaster': 'eixample',
+  'Junhao':      'gracia',
+  'SnakeKing':   'poblenou',
+  'Alicia':      'gracia',
+  'Jiajun':      'eixample',
+  'RunnerX':     'ub',
+  'FastFoot':    'poblenou',
+  'GreenMamba':  'ub',
+  'Sprinter99':  'eixample',
+  'MilesAhead':  'gracia',
+}
+
 const allEntries    = ref([])
 const friendEntries = ref([])
 const currentName   = ref('')
@@ -108,254 +146,55 @@ const zone          = ref('all')
 const filterOpen    = ref(false)
 
 const visibleEntries = computed(() => {
-  const base = scope.value === 'global' ? allEntries.value : friendEntries.value
+  let base = scope.value === 'global' ? allEntries.value : friendEntries.value
+  if (zone.value !== 'all') base = base.filter(e => e.zone === zone.value)
   return [...base].sort((a, b) => {
     if (sortBy.value === 'streak') return b.streak - a.streak
-    if (sortBy.value === 'food')   return b.streak * 50 - a.streak * 50
+    if (sortBy.value === 'food')   return b.food   - a.food
     return b.score - a.score
   })
 })
 
+function displayValue (entry) {
+  if (sortBy.value === 'streak') return entry.streak
+  if (sortBy.value === 'food')   return entry.food
+  return entry.score
+}
+
 onMounted(() => {
-  allEntries.value  = GetLeaderboardUseCase.execute()
   currentName.value = GetPlayersUseCase.getCurrent().name
 
-  // Build friend leaderboard from friend data
+  const raw = GetLeaderboardUseCase.execute()
+  allEntries.value = raw.map((e, i) => ({
+    ...e,
+    color: PLAYER_COLORS[i % PLAYER_COLORS.length],
+    food: e.food ?? e.streak * 42,
+    zone: PLAYER_ZONES[e.name] ?? 'eixample',
+  }))
+
   const friendList = GetFriendsUseCase.execute()
-  friendEntries.value = friendList.map((f, i) => ({
-    rank:   i + 1,
-    name:   f.name,
-    score:  f.score,
-    streak: f.streak,
-    avatar: ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣'][i] ?? '🎮',
-  })).sort((a, b) => b.score - a.score).map((e, i) => ({ ...e, rank: i + 1 }))
+  friendEntries.value = [...friendList]
+    .sort((a, b) => b.score - a.score)
+    .map((f, i) => ({
+      rank: i + 1, name: f.name, score: f.score,
+      streak: f.streak, food: f.food,
+      color: PLAYER_COLORS[i % PLAYER_COLORS.length],
+    }))
 })
 </script>
 
 <style scoped>
-.leaderboard-view {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-  background: #0f0f1a;
-}
+/* Medal border colors for top 3 */
+.lb-gold   { border-left: 4px solid #f0d060 !important; background: #fffdf0; }
+.lb-silver { border-left: 4px solid #b0b0b8 !important; }
+.lb-bronze { border-left: 4px solid #c87832 !important; background: #fffaf6; }
+.lb-me     { background: #f0fdf0; }
 
-/* ── Header ── */
-.lb-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px 10px;
-  flex-shrink: 0;
-}
-
-.lb-toggle {
-  display: flex;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
-  padding: 4px;
-}
-
-.toggle-btn {
-  padding: 7px 16px;
-  border-radius: 16px;
-  border: none;
-  background: transparent;
-  font-size: 13px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.45);
-  cursor: pointer;
-  font-family: 'Nunito', sans-serif;
-  transition: all 0.2s;
-}
-
-.toggle-active {
-  background: #39FF14;
-  color: #0a0a14;
-  box-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
-}
-
-.filter-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.filter-btn:hover {
-  border-color: #39FF14;
-  color: #39FF14;
-}
-
-/* ── Filter panel ── */
-.filter-panel {
-  padding: 10px 16px 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.filter-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.filter-lbl {
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.4);
-  font-family: 'Nunito', sans-serif;
-  width: 72px;
-  flex-shrink: 0;
-}
-
-.sort-pills {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.sort-pill {
-  padding: 5px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: 'Nunito', sans-serif;
-  transition: all 0.18s;
-}
-
-.pill-active {
-  border-color: #39FF14;
-  color: #39FF14;
-  background: rgba(57, 255, 20, 0.1);
-}
-
-.zone-select {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  color: #fff;
-  font-size: 12px;
-  font-family: 'Nunito', sans-serif;
-  padding: 6px 10px;
-  outline: none;
-  cursor: pointer;
-}
-
-/* ── List ── */
-.lb-list {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-.lb-inner {
-  padding: 8px 12px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.lb-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  transition: border-color 0.2s;
-}
-
-.row-gold   { border-color: rgba(255, 215, 0, 0.5);   background: rgba(255, 215, 0, 0.07); }
-.row-silver { border-color: rgba(192, 192, 192, 0.4);  background: rgba(192, 192, 192, 0.05); }
-.row-bronze { border-color: rgba(205, 127, 50, 0.4);   background: rgba(205, 127, 50, 0.05); }
-.row-me     { border-color: rgba(57, 255, 20, 0.5);    background: rgba(57, 255, 20, 0.07); }
-
-.rank-cell {
-  font-size: 20px;
-  width: 30px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.name-cell {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.player-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-  font-family: 'Nunito', sans-serif;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.streak-badge {
-  font-size: 10px;
-  font-weight: 700;
-  color: rgba(255, 140, 0, 0.85);
-  font-family: 'Nunito', sans-serif;
-  white-space: nowrap;
-}
-
-.score-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  flex-shrink: 0;
-}
-
-.score-num {
-  font-size: 15px;
-  font-weight: 900;
-  color: #39FF14;
-  font-family: 'Nunito', sans-serif;
-}
-
-.score-unit {
-  font-size: 9px;
-  font-weight: 700;
-  color: rgba(57, 255, 20, 0.55);
-  font-family: 'Nunito', sans-serif;
-  letter-spacing: 0.5px;
-}
-
-/* ── Transitions ── */
-.filter-slide-enter-active,
-.filter-slide-leave-active { transition: all 0.22s ease; overflow: hidden; }
-.filter-slide-enter-from,
-.filter-slide-leave-to     { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; }
-.filter-slide-enter-to,
-.filter-slide-leave-from   { opacity: 1; max-height: 200px; }
-
-.tab-slide-enter-active,
-.tab-slide-leave-active { transition: opacity 0.18s ease; }
-.tab-slide-enter-from,
-.tab-slide-leave-to     { opacity: 0; }
+/* Transitions */
+.filter-slide-enter-active, .filter-slide-leave-active { transition: all .22s ease; overflow: hidden; }
+.filter-slide-enter-from, .filter-slide-leave-to { opacity: 0; max-height: 0; padding-top: 0 !important; padding-bottom: 0 !important; }
+.filter-slide-enter-to, .filter-slide-leave-from { opacity: 1; max-height: 200px; }
+.tab-slide-enter-active, .tab-slide-leave-active { transition: opacity .15s ease; }
+.tab-slide-enter-from, .tab-slide-leave-to { opacity: 0; }
 </style>
+

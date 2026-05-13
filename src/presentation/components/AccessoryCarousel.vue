@@ -39,9 +39,9 @@ defineEmits(['select'])
 .carousel-label {
   font-size: 13px;
   font-weight: 700;
-  color: rgba(255,255,255,0.6);
-  font-family: 'Nunito', sans-serif;
-  letter-spacing: 0.5px;
+  color: #555;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.3px;
 }
 
 .carousel-track {
@@ -63,8 +63,8 @@ defineEmits(['select'])
   min-width: 70px;
   height: 76px;
   border-radius: 16px;
-  background: rgba(255,255,255,0.05);
-  border: 2px solid rgba(255,255,255,0.08);
+  background: #f4f4f6;
+  border: 1.5px solid #e0e0e6;
   cursor: pointer;
   flex-shrink: 0;
   position: relative;
@@ -72,9 +72,9 @@ defineEmits(['select'])
 }
 
 .card-selected {
-  border-color: #39FF14;
-  background: rgba(57,255,20,0.12);
-  box-shadow: 0 0 14px rgba(57,255,20,0.25);
+  border-color: #2a9e2a;
+  background: #f0fdf0;
+  box-shadow: 0 0 0 2px rgba(42,158,42,0.18);
 }
 
 .card-locked {
@@ -89,9 +89,9 @@ defineEmits(['select'])
 
 .acc-name {
   font-size: 9px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.6);
-  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  color: #888;
+  font-family: 'Inter', sans-serif;
   text-align: center;
 }
 

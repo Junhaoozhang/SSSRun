@@ -91,7 +91,7 @@ const BODY_W    = 14   // width of the body block (polyline stroke)
 const SEG_R     = 7    // radius of food apple drawn on nav canvas
 const N_BODY    = 18   // fixed number of body segments shown (doesn't change visually)
 const SEG_GAP   = 14   // spacing between segment positions
-const SPEED     = 0.28 // much slower
+const SPEED     = 0.56 // 2x faster
 
 let ctx, hpath, totalLen
 let pathPts   = []
@@ -115,12 +115,13 @@ function buildHelperPath () {
 
 function buildPath () {
   const canvas = canvasRef.value
-  const sx = canvas.width  / 430
-  const sy = canvas.height / 88
+  const sx = canvas.width / 430
+  const dy = canvas.height - 88   // canvas extends this many px above nav area
   pathPts = []
   for (let i = 0; i <= N_SAMPLES; i++) {
     const p = hpath.getPointAtLength((i / N_SAMPLES) * totalLen)
-    pathPts.push({ x: p.x * sx, y: p.y * sy })
+    // SVG y is in 0-88 space; canvas top is `dy` px above nav top, so shift down
+    pathPts.push({ x: p.x * sx, y: p.y + dy })
   }
   let totalPx = 0
   for (let i = 1; i < pathPts.length; i++)
@@ -305,16 +306,21 @@ onUnmounted(() => {
   position: relative;
   height: 88px;
   z-index: 100;
+  overflow: visible;
 }
 
-/* Snake canvas — above SVG fill, below PLAY button */
+/* Snake canvas — overflows above the nav bar */
 .snake-canvas {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
-  height: 100%;
-  z-index: 22;
+  height: 130%;   /* extends 30% above the nav bar */
+  top: auto;
+  z-index: 50;    /* above SVG, buttons AND the PLAY btn */
   pointer-events: none;
+  overflow: visible;
 }
 
 /* SVG curved bar */
