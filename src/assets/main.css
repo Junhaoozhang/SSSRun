@@ -7,8 +7,8 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  background: #060611;
-  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #e5e5ea;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -19,18 +19,15 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #0f0f1a;
+  background: #fff;
   position: relative;
+  box-shadow: 0 0 60px rgba(0,0,0,.18);
 }
 
-/* Scrollbar for leaderboard */
-::-webkit-scrollbar {
-  width: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(57, 255, 20, 0.3);
-  border-radius: 2px;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(42,158,42,.25); border-radius: 2px; }
+
+/* Leaflet attribution tiny */
+.leaflet-control-attribution { font-size: 8px !important; }

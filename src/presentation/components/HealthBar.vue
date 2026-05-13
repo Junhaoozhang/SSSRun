@@ -37,73 +37,50 @@ const fillClass = computed(() => {
 
 <style scoped>
 .healthbar-wrap {
-  padding: 6px 20px 10px;
-  background: #0f0f1a;
+  padding: 2px 18px 10px;
+  background: #fff;
   flex-shrink: 0;
 }
 
 .healthbar-labels {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .hb-label,
 .hb-value {
   font-size: 11px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.55);
-  font-family: 'Nunito', sans-serif;
-  letter-spacing: 0.5px;
+  font-weight: 600;
+  color: #999;
+  letter-spacing: 0.3px;
 }
 
 .healthbar-track {
   position: relative;
-  height: 11px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
+  height: 6px;
+  background: #f0f0f3;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .healthbar-fill {
   height: 100%;
-  border-radius: 6px;
+  border-radius: 3px;
   transition: width 0.6s ease;
 }
 
-.fill-high {
-  background: linear-gradient(90deg, #39FF14, #00d000);
-  box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
-}
-
-.fill-medium {
-  background: linear-gradient(90deg, #FFD700, #ff8c00);
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
-}
-
+.fill-high  { background: linear-gradient(90deg, #2a9e2a, #5cc85c); }
+.fill-medium { background: linear-gradient(90deg, #f5a623, #f0c040); }
 .fill-low {
-  background: linear-gradient(90deg, #ff4444, #c00000);
-  box-shadow: 0 0 8px rgba(255, 68, 68, 0.5);
+  background: linear-gradient(90deg, #e53935, #ef5350);
   animation: hb-pulse 1s ease-in-out infinite;
 }
 
 @keyframes hb-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.55; }
 }
 
-.healthbar-segments {
-  position: absolute;
-  inset: 0;
-  display: flex;
-}
-
-.segment {
-  flex: 1;
-  border-right: 1px solid rgba(0, 0, 0, 0.35);
-}
-
-.segment:last-child {
-  border-right: none;
-}
+.healthbar-segments { display: none; }
 </style>
