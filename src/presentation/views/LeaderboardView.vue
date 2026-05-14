@@ -1,23 +1,19 @@
 <template>
-  <div class="d-flex flex-column overflow-hidden h-100" style="background:#f4f4f6">
+  <div class="lb-view">
 
-    <!-- Header with Scope toggle + filter button -->
-    <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white border-bottom flex-shrink-0">
-      <button class="btn btn-sm btn-light border flex-shrink-0" style="width:36px;height:36px;padding:0" @click="$router.back()" title="Atrás">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    <!-- Header -->
+    <div class="lb-header">
+      <button class="back-btn" @click="$router.back()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+        </svg>
       </button>
-      <div class="btn-group flex-grow-1" role="group">
-        <input type="radio" class="btn-check" id="scope-global" autocomplete="off"
-               v-model="scope" value="global">
-        <label class="btn btn-outline-success btn-sm fw-semibold" for="scope-global">🌍 Global</label>
-        <input type="radio" class="btn-check" id="scope-friends" autocomplete="off"
-               v-model="scope" value="friends">
-        <label class="btn btn-outline-success btn-sm fw-semibold" for="scope-friends">👥 Amigos</label>
+      <div class="scope-toggle">
+        <button class="scope-btn" :class="{ active: scope === 'global' }" @click="scope = 'global'">🌍 Global</button>
+        <button class="scope-btn" :class="{ active: scope === 'friends' }" @click="scope = 'friends'">👥 Amigos</button>
       </div>
-      <button class="btn btn-sm border fw-semibold flex-shrink-0"
-              :class="filterOpen ? 'btn-success text-white' : 'btn-light'"
-              style="width:36px;height:36px;padding:0"
-              @click="filterOpen = !filterOpen">
+      <button class="filter-btn" :class="{ active: filterOpen }" @click="filterOpen = !filterOpen">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="4" y1="6" x2="20" y2="6"/>
@@ -29,21 +25,18 @@
 
     <!-- Filter panel -->
     <Transition name="filter-slide">
-      <div v-if="filterOpen" class="bg-white border-bottom px-3 pt-3 pb-3 flex-shrink-0">
-        <div class="mb-3">
-          <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">Ordenar</p>
-          <div class="btn-group w-100" role="group">
-            <input type="radio" class="btn-check" id="sort-score"  autocomplete="off" v-model="sortBy" value="score">
-            <label class="btn btn-outline-success btn-sm fw-semibold" for="sort-score">⭐ Puntos</label>
-            <input type="radio" class="btn-check" id="sort-food"   autocomplete="off" v-model="sortBy" value="food">
-            <label class="btn btn-outline-success btn-sm fw-semibold" for="sort-food">🍎 Comida</label>
-            <input type="radio" class="btn-check" id="sort-streak" autocomplete="off" v-model="sortBy" value="streak">
-            <label class="btn btn-outline-success btn-sm fw-semibold" for="sort-streak">🔥 Racha</label>
+      <div v-if="filterOpen" class="filter-panel">
+        <div class="filter-section">
+          <p class="filter-label">Ordenar</p>
+          <div class="radio-group">
+            <button class="radio-btn" :class="{ active: sortBy === 'score' }" @click="sortBy = 'score'">⭐ Puntos</button>
+            <button class="radio-btn" :class="{ active: sortBy === 'food' }" @click="sortBy = 'food'">🍎 Comida</button>
+            <button class="radio-btn" :class="{ active: sortBy === 'streak' }" @click="sortBy = 'streak'">🔥 Racha</button>
           </div>
         </div>
-        <div>
-          <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">Zona</p>
-          <select class="form-select form-select-sm" v-model="zone">
+        <div class="filter-section">
+          <p class="filter-label">Zona</p>
+          <select class="zone-select" v-model="zone">
             <option value="all">Todas las zonas</option>
             <option value="ub">Campus UB</option>
             <option value="gracia">Gràcia</option>
@@ -55,66 +48,38 @@
     </Transition>
 
     <!-- List -->
-    <div class="flex-grow-1 overflow-auto p-3">
-      <Transition name="tab-slide" mode="out-in">
-        <div :key="scope + sortBy" class="list-group shadow-sm">
-          <div
-            v-for="(entry, i) in visibleEntries"
-            :key="entry.name"
-            class="list-group-item d-flex align-items-center gap-3 py-2 px-3"
-            :class="{
-              'lb-gold':   i === 0,
-              'lb-silver': i === 1,
-              'lb-bronze': i === 2,
-              'lb-me':     entry.name === currentName,
-            }"
-          >
-            <!-- Rank medal / number -->
-            <div class="text-center flex-shrink-0" style="width:28px">
-              <template v-if="i < 3">
-                <span style="font-size:20px">{{ ['🥇','🥈','🥉'][i] }}</span>
-              </template>
-              <span v-else class="fw-black" style="color:#aaa;font-size:13px">{{ i + 1 }}</span>
-            </div>
-
-            <!-- Avatar -->
-            <div class="rounded-circle d-flex align-items-center justify-content-center fw-black flex-shrink-0"
-                 :style="{
-                   width:'36px', height:'36px',
-                   background: entry.color + '22',
-                   color: entry.color,
-                   border: '2px solid ' + entry.color,
-                   fontSize: '14px'
-                 }">
-              {{ entry.name.charAt(0) }}
-            </div>
-
-            <!-- Name + streak -->
-            <div class="flex-grow-1 min-width-0">
-              <div class="fw-bold text-truncate" style="font-size:14px">{{ entry.name }}</div>
-              <span class="badge fw-semibold border"
-                    style="font-size:10px;background:#fff5f5;color:#e74c3c;border-color:#fcc!important">
-                🔥 {{ entry.streak }}d
-              </span>
-            </div>
-
-            <!-- Score -->
-            <div class="text-end flex-shrink-0">
-              <div class="fw-black text-success" style="font-size:15px">
-                {{ displayValue(entry).toLocaleString() }}
-              </div>
-              <small class="text-muted">
-                {{ sortBy === 'score' ? 'pts' : sortBy === 'food' ? '🍎' : 'días' }}
-              </small>
-            </div>
-          </div>
-
-          <div v-if="visibleEntries.length === 0"
-               class="list-group-item text-center text-muted py-4">
-            Sin resultados para esta zona
-          </div>
+    <div class="lb-list">
+      <div
+        v-for="(entry, i) in visibleEntries"
+        :key="entry.name"
+        class="lb-row"
+        :class="{
+          'lb-gold':   i === 0,
+          'lb-silver': i === 1,
+          'lb-bronze': i === 2,
+          'lb-me':     entry.name === currentName,
+        }"
+      >
+        <div class="rank-col">
+          <span v-if="i < 3" style="font-size:20px">{{ ['🥇','🥈','🥉'][i] }}</span>
+          <span v-else class="rank-num">{{ i + 1 }}</span>
         </div>
-      </Transition>
+        <div class="lb-avatar" :style="{ background: entry.color + '22', color: entry.color, border: '2px solid ' + entry.color }">
+          {{ entry.name.charAt(0) }}
+        </div>
+        <div class="lb-info">
+          <div class="lb-name">{{ entry.name }}</div>
+          <span class="streak-badge">🔥 {{ entry.streak }}d</span>
+        </div>
+        <div class="lb-score">
+          <div class="score-val">{{ displayValue(entry).toLocaleString() }}</div>
+          <div class="score-unit">{{ sortBy === 'score' ? 'pts' : sortBy === 'food' ? '🍎' : 'días' }}</div>
+        </div>
+      </div>
+
+      <div v-if="visibleEntries.length === 0" class="empty-state">
+        Sin resultados para esta zona
+      </div>
     </div>
   </div>
 </template>
@@ -187,17 +152,99 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Medal border colors for top 3 */
-.lb-gold   { border-left: 4px solid #f0d060 !important; background: #fffdf0; }
-.lb-silver { border-left: 4px solid #b0b0b8 !important; }
-.lb-bronze { border-left: 4px solid #c87832 !important; background: #fffaf6; }
-.lb-me     { background: #f0fdf0; }
+.lb-view {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  background: #f7f7f8;
+  font-family: 'Inter', sans-serif;
+}
 
-/* Transitions */
-.filter-slide-enter-active, .filter-slide-leave-active { transition: all .22s ease; overflow: hidden; }
+/* Header */
+.lb-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+.back-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #333;
+  flex-shrink: 0;
+}
+.scope-toggle { display: flex; flex: 1; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+.scope-btn { flex: 1; padding: 7px 0; border: none; background: #fff; font-size: 13px; font-weight: 600; color: #888; cursor: pointer; font-family: 'Inter', sans-serif; }
+.scope-btn.active { background: #2a9e2a; color: #fff; }
+.filter-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; cursor: pointer; color: #555; flex-shrink: 0; }
+.filter-btn.active { background: #2a9e2a; color: #fff; border-color: #2a9e2a; }
+
+/* Filter panel */
+.filter-panel { background: #fff; border-bottom: 1px solid #eee; padding: 14px 14px 16px; flex-shrink: 0; }
+.filter-section { margin-bottom: 14px; }
+.filter-section:last-child { margin-bottom: 0; }
+.filter-label { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
+.radio-group { display: flex; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+.radio-btn { flex: 1; padding: 7px 0; border: none; background: #fff; font-size: 12px; font-weight: 600; color: #888; cursor: pointer; font-family: 'Inter', sans-serif; border-right: 1px solid #e0e0e0; }
+.radio-btn:last-child { border-right: none; }
+.radio-btn.active { background: #2a9e2a; color: #fff; }
+.zone-select { width: 100%; padding: 8px 10px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; background: #fff; }
+
+/* List */
+.lb-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 0; }
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+.lb-row:first-child { border-radius: 10px 10px 0 0; }
+.lb-row:last-child  { border-bottom: none; border-radius: 0 0 10px 10px; }
+
+.lb-gold   { border-left: 3px solid #f0d060; }
+.lb-silver { border-left: 3px solid #b0b0b8; }
+.lb-bronze { border-left: 3px solid #c87832; }
+.lb-me     { background: #f6fff6; }
+
+.rank-col { width: 28px; text-align: center; flex-shrink: 0; }
+.rank-num { font-size: 13px; font-weight: 700; color: #bbb; }
+
+.lb-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.lb-info { flex: 1; min-width: 0; }
+.lb-name { font-size: 14px; font-weight: 600; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.streak-badge { font-size: 10px; color: #e74c3c; background: #fff5f5; border: 1px solid #fcc; border-radius: 4px; padding: 1px 5px; }
+
+.lb-score { text-align: right; flex-shrink: 0; }
+.score-val  { font-size: 15px; font-weight: 700; color: #2a9e2a; }
+.score-unit { font-size: 11px; color: #aaa; }
+
+.empty-state { text-align: center; color: #aaa; padding: 32px 0; font-size: 14px; }
+
+.filter-slide-enter-active, .filter-slide-leave-active { transition: all .2s ease; overflow: hidden; }
 .filter-slide-enter-from, .filter-slide-leave-to { opacity: 0; max-height: 0; padding-top: 0 !important; padding-bottom: 0 !important; }
 .filter-slide-enter-to, .filter-slide-leave-from { opacity: 1; max-height: 200px; }
-.tab-slide-enter-active, .tab-slide-leave-active { transition: opacity .15s ease; }
-.tab-slide-enter-from, .tab-slide-leave-to { opacity: 0; }
 </style>
 

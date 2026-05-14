@@ -13,12 +13,14 @@
       </RouterView>
     </main>
 
-    <!-- Snake decoration + bottom nav hidden on game screen -->
-    <template v-if="route.name !== 'game' && !playMode">
+    <!-- Bottom nav hidden only on game screen -->
+    <template v-if="route.name !== 'game'">
       <BottomNavBar
         :active-tab="navTab"
+        :play-mode="playMode"
         @tab-change="onTabChange"
         @play="onPlay"
+        @pause="onPause"
       />
     </template>
   </div>
@@ -38,8 +40,13 @@ const route  = useRoute()
 const currentPlayer = ref({ name: 'Jugador', health: 80, maxHealth: 100, score: 0, level: 1 })
 const playMode = ref(false)
 const navTab   = ref('map')
+const showGroupPicker = ref(false)
+const gamePaused = ref(false)
 provide('playMode', playMode)
 provide('navTab', navTab)
+provide('showGroupPicker', showGroupPicker)
+provide('gamePaused', gamePaused)
+provide('currentPlayer', currentPlayer)
 
 const activeTab = computed(() => {
   if (route.name === 'leaderboard') return 'leaderboard'
@@ -61,7 +68,17 @@ function onTabChange (tab) {
 }
 
 function onPlay () {
-  playMode.value = true
+  if (route.name !== 'home') {
+    router.push({ name: 'home' }).then(() => {
+      showGroupPicker.value = true
+    })
+  } else {
+    showGroupPicker.value = true
+  }
+}
+
+function onPause () {
+  gamePaused.value = true
 }
 
 onMounted(() => {

@@ -1,35 +1,16 @@
 <template>
-  <div class="home-view" :class="{ 'play-mode': playMode }">
+  <div class="home-view">
 
-    <!-- ── Top tabs: General / Grupos (hidden while friends panel is open) ── -->
-    <div class="tabs" v-if="!playMode && navTab !== 'friends'">
-      <div class="tab-pill-wrap">
-        <button class="tab-pill" :class="{ active: tab === 'general' }" @click="tab = 'general'">
-          General
-        </button>
-        <button class="tab-pill" :class="{ active: tab === 'groups' }" @click="tab = 'groups'">
-          Grupos
-        </button>
-      </div>
-    </div>
-
-    <!-- ── Map area ── -->
+    <!-- ── Map area (always visible, always general view) ── -->
     <div class="map-content">
       <div ref="mapRef" class="map" />
 
-      <!-- Danger flash overlay (near collision) -->
-      <div v-if="dangerLevel" class="danger-flash" :class="dangerLevel" />
+      <!-- Danger flash overlay -->
+      <div v-if="dangerLevel && playMode" class="danger-flash" :class="dangerLevel">
+        <div class="danger-label">⚠ Estela aprop!</div>
+      </div>
 
       <!-- Pause overlay (play mode) -->
-      <button v-if="playMode && !paused" class="pause-btn" @click="paused = true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round">
-          <rect x="6" y="4" width="4" height="16" rx="1"/>
-          <rect x="14" y="4" width="4" height="16" rx="1"/>
-        </svg>
-      </button>
-
-      <!-- Pause menu overlay -->
       <Transition name="fade">
         <div v-if="paused" class="pause-overlay">
           <div class="pause-card">
@@ -54,7 +35,7 @@
         </div>
       </Transition>
 
-      <!-- Summary overlay (after finishing) -->
+      <!-- Summary overlay -->
       <Transition name="fade">
         <div v-if="showSummary" class="pause-overlay">
           <div class="pause-card">
@@ -76,243 +57,183 @@
                 <span class="stat-label">Tiempo</span>
                 <span class="stat-val">{{ statsTime }}</span>
               </div>
+              <div class="stat-row stat-row-pts">
+                <span class="stat-label">Puntos ganados</span>
+                <span class="stat-val stat-pts">+{{ statsPoints.toLocaleString() }} pts</span>
+              </div>
             </div>
             <button class="pause-action continue" @click="closeSummary">✓ Aceptar</button>
           </div>
         </div>
       </Transition>
 
-      <!-- Friends + Groups panel (slides in from nav "Amigos" button) -->
+      <!-- Group picker modal (before starting) -->
+      <Transition name="fade">
+        <div v-if="showGroupPicker" class="picker-overlay" @click.self="showGroupPicker = false">
+          <div class="picker-sheet">
+            <div class="picker-title">¿Con quién juegas?</div>
+            <button class="picker-option" @click="startPlay(null)">
+              <span class="picker-emoji">🌍</span>
+              <span>General</span>
+            </button>
+            <button
+              v-for="g in joinedGroups"
+              :key="g.id"
+              class="picker-option"
+              @click="startPlay(g.id)"
+            >
+              <span class="picker-emoji">{{ g.emoji }}</span>
+              <span>{{ g.name }}</span>
+            </button>
+            <button class="picker-cancel" @click="showGroupPicker = false">Cancelar</button>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- Friends panel -->
       <div class="side-panel" :class="{ visible: navTab === 'friends' && !playMode }">
-        <!-- Nav tabs: Amigos / Grupos -->
-        <div class="bg-white border-bottom flex-shrink-0">
-          <ul class="nav nav-tabs px-3 pt-2 border-0">
-            <li class="nav-item flex-fill text-center">
-              <button class="nav-link w-100 fw-bold border-0"
-                      :class="{ active: friendTab === 'amigos' }"
-                      @click="friendTab = 'amigos'">Amigos</button>
-            </li>
-            <li class="nav-item flex-fill text-center">
-              <button class="nav-link w-100 fw-bold border-0"
-                      :class="{ active: friendTab === 'grupos' }"
-                      @click="friendTab = 'grupos'">Grupos</button>
-            </li>
-          </ul>
+        <!-- Panel header with back button -->
+        <div class="panel-header">
+          <button class="panel-back-btn" @click="navTab = 'map'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <div class="panel-tabs">
+            <button class="panel-tab" :class="{ active: friendTab === 'amigos' }" @click="friendTab = 'amigos'">Amigos</button>
+            <button class="panel-tab" :class="{ active: friendTab === 'grupos' }" @click="friendTab = 'grupos'">Grupos</button>
+          </div>
         </div>
 
         <!-- Amigos list -->
-        <div v-if="friendTab === 'amigos'" class="overflow-auto flex-grow-1 p-3">
-          <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">
-            Amigos ({{ sortedFriends.length }})
-          </p>
-          <div class="list-group mb-4">
-            <div v-for="f in sortedFriends" :key="f.id"
-                 class="list-group-item d-flex align-items-center gap-3 py-2 px-3">
-              <div class="position-relative flex-shrink-0">
-                <div class="rounded-circle d-flex align-items-center justify-content-center fw-black"
-                     :style="{ width:'40px', height:'40px', background: f.color+'18', border:'2.5px solid '+f.color, color:f.color, fontSize:'16px' }">
-                  {{ f.name.charAt(0) }}
+        <div v-if="friendTab === 'amigos'" class="panel-body">
+          <p class="section-label">Amigos ({{ sortedFriends.length }})</p>
+          <div class="player-list">
+            <div v-for="f in sortedFriends" :key="f.id" class="player-row">
+              <div class="avatar" :style="{ background: f.color + '18', border: '2px solid ' + f.color, color: f.color }">
+                {{ f.name.charAt(0) }}
+              </div>
+              <div class="player-info">
+                <div class="player-name">{{ f.name }}</div>
+                <div class="player-sub" :style="{ color: f.isOnline ? '#2ecc71' : '#aaa' }">
+                  {{ f.isOnline ? '● Jugando' : '○ Offline' }} · Nv.{{ f.level }}
                 </div>
-                <span class="position-absolute rounded-circle border border-2 border-white"
-                      :style="{ width:'11px', height:'11px', background: f.isOnline ? '#2ecc71' : '#ccc', bottom:0, right:0, display:'block' }"></span>
               </div>
-              <div class="flex-grow-1 min-width-0">
-                <div class="fw-bold text-truncate" style="font-size:14px">{{ f.name }}</div>
-                <small class="text-muted">Nv.{{ f.level }} ·
-                  <span :style="{ color: f.isOnline ? '#2ecc71' : '#bbb' }">
-                    {{ f.isOnline ? '● Jugando' : '○ Offline' }}
-                  </span>
-                </small>
-              </div>
-              <span class="badge border fw-semibold flex-shrink-0"
-                    style="background:#f4f4f6;color:#444;font-size:11px">🍎 {{ f.food }}</span>
-              <button class="btn btn-sm btn-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                      style="width:28px;height:28px;font-size:11px;padding:0"
-                      @click="removeFriend(f.id)" title="Eliminar amigo">✕</button>
+              <span class="badge-food">🍎 {{ f.food }}</span>
+              <button class="icon-btn" @click="removeFriend(f.id)">✕</button>
             </div>
           </div>
 
-          <p class="text-uppercase fw-bold mb-2 mt-1" style="font-size:10px;color:#aaa;letter-spacing:.8px">
-            Añadir amigos
-          </p>
-          <div class="list-group">
-            <div v-for="f in nonFriends" :key="'nf-'+f.id"
-                 class="list-group-item d-flex align-items-center gap-3 py-2 px-3"
-                 style="opacity:.85">
-              <div class="rounded-circle d-flex align-items-center justify-content-center fw-black flex-shrink-0"
-                   :style="{ width:'40px', height:'40px', background: f.color+'18', border:'2.5px solid '+f.color, color:f.color, fontSize:'16px' }">
+          <p class="section-label mt">Añadir amigos</p>
+          <div class="player-list">
+            <div v-for="f in nonFriends" :key="'nf-'+f.id" class="player-row muted">
+              <div class="avatar" :style="{ background: f.color + '18', border: '2px solid ' + f.color, color: f.color }">
                 {{ f.name.charAt(0) }}
               </div>
-              <div class="flex-grow-1 min-width-0">
-                <div class="fw-bold text-truncate" style="font-size:14px">{{ f.name }}</div>
-                <small class="text-muted">Nv.{{ f.level }}</small>
+              <div class="player-info">
+                <div class="player-name">{{ f.name }}</div>
+                <div class="player-sub">Nv.{{ f.level }}</div>
               </div>
-              <button class="btn btn-sm btn-outline-success rounded-pill fw-bold flex-shrink-0"
-                      @click="addFriend(f.id)">+ Añadir</button>
+              <button class="add-btn" @click="addFriend(f.id)">+ Añadir</button>
             </div>
           </div>
-          <p v-if="nonFriends.length === 0" class="text-center text-muted py-3 small">
-            ¡Ya sigues a todos!
-          </p>
+          <p v-if="nonFriends.length === 0" class="empty-msg">¡Ya sigues a todos!</p>
         </div>
 
         <!-- Grupos list -->
-        <div v-if="friendTab === 'grupos'" class="overflow-auto flex-grow-1 p-3 pb-4">
-
-          <!-- ── Group management detail ── -->
+        <div v-if="friendTab === 'grupos'" class="panel-body">
           <template v-if="managingGroup">
-            <button class="btn btn-link p-0 fw-bold text-success mb-3 text-decoration-none"
-                    @click="managingGroup = null">← Volver</button>
-            <div class="card rounded-4 border mb-3">
-              <div class="card-body d-flex align-items-center gap-3 py-3">
-                <span style="font-size:30px">{{ managingGroup.emoji }}</span>
-                <div>
-                  <div class="fw-black" style="font-size:16px">{{ managingGroup.name }}</div>
-                  <small class="text-muted">
-                    {{ groupMemberCount(managingGroup.id) }} miembro{{ groupMemberCount(managingGroup.id) !== 1 ? 's' : '' }}
-                  </small>
-                </div>
+            <button class="back-link" @click="managingGroup = null">← Volver</button>
+            <div class="group-card">
+              <span style="font-size:28px">{{ managingGroup.emoji }}</span>
+              <div>
+                <div class="player-name">{{ managingGroup.name }}</div>
+                <div class="player-sub">{{ groupMemberCount(managingGroup.id) }} miembros</div>
               </div>
             </div>
 
-            <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">Miembros</p>
-            <p v-if="groupMembers(managingGroup.id).length === 0"
-               class="text-center text-muted small py-2">Sin miembros aún</p>
-            <div class="list-group mb-3">
-              <div v-for="p in groupMembers(managingGroup.id)" :key="'gm-'+p.id"
-                   class="list-group-item d-flex align-items-center gap-3 py-2 px-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center fw-black flex-shrink-0"
-                     :style="{ width:'36px', height:'36px', background: p.color+'18', border:'2px solid '+p.color, color:p.color, fontSize:'14px' }">
+            <p class="section-label">Miembros</p>
+            <p v-if="groupMembers(managingGroup.id).length === 0" class="empty-msg">Sin miembros aún</p>
+            <div class="player-list">
+              <div v-for="p in groupMembers(managingGroup.id)" :key="'gm-'+p.id" class="player-row">
+                <div class="avatar sm" :style="{ background: p.color + '18', border: '2px solid ' + p.color, color: p.color }">
                   {{ p.name.charAt(0) }}
                 </div>
-                <div class="fw-semibold flex-grow-1 text-truncate" style="font-size:14px">{{ p.name }}</div>
-                <small class="text-muted flex-shrink-0">Nv.{{ p.level }}</small>
-                <button class="btn btn-sm btn-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                        style="width:28px;height:28px;font-size:11px;padding:0"
-                        @click="removeMemberFromGroup(managingGroup.id, p.id)">✕</button>
+                <div class="player-info">
+                  <div class="player-name">{{ p.name }}</div>
+                  <div class="player-sub">Nv.{{ p.level }}</div>
+                </div>
+                <button class="icon-btn" @click="removeMemberFromGroup(managingGroup.id, p.id)">✕</button>
               </div>
             </div>
 
-            <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">Añadir miembros</p>
-            <p v-if="nonGroupMembers(managingGroup.id).length === 0"
-               class="text-center text-muted small py-2">Ya están todos</p>
-            <div class="list-group mb-3">
-              <div v-for="p in nonGroupMembers(managingGroup.id)" :key="'ngm-'+p.id"
-                   class="list-group-item d-flex align-items-center gap-3 py-2 px-3"
-                   style="opacity:.85">
-                <div class="rounded-circle d-flex align-items-center justify-content-center fw-black flex-shrink-0"
-                     :style="{ width:'36px', height:'36px', background: p.color+'18', border:'2px solid '+p.color, color:p.color, fontSize:'14px' }">
+            <p class="section-label mt">Añadir miembros</p>
+            <div class="player-list">
+              <div v-for="p in nonGroupMembers(managingGroup.id)" :key="'ngm-'+p.id" class="player-row muted">
+                <div class="avatar sm" :style="{ background: p.color + '18', border: '2px solid ' + p.color, color: p.color }">
                   {{ p.name.charAt(0) }}
                 </div>
-                <div class="fw-semibold flex-grow-1 text-truncate" style="font-size:14px">{{ p.name }}</div>
-                <small class="text-muted flex-shrink-0">Nv.{{ p.level }}</small>
-                <button class="btn btn-sm btn-outline-success rounded-pill fw-bold flex-shrink-0"
-                        @click="addMemberToGroup(managingGroup.id, p.id)">+ Añadir</button>
+                <div class="player-info">
+                  <div class="player-name">{{ p.name }}</div>
+                  <div class="player-sub">Nv.{{ p.level }}</div>
+                </div>
+                <button class="add-btn" @click="addMemberToGroup(managingGroup.id, p.id)">+ Añadir</button>
               </div>
             </div>
 
-            <button class="btn btn-outline-danger w-100 rounded-3 fw-bold py-3 mt-2"
-                    @click="toggleJoin(managingGroup.id); managingGroup = null">
-              Salir del grupo
-            </button>
+            <button class="danger-btn" @click="toggleJoin(managingGroup.id); managingGroup = null">Salir del grupo</button>
           </template>
 
-          <!-- ── Groups list ── -->
           <template v-else>
-            <button v-if="!showCreateGroup"
-                    class="btn w-100 fw-bold rounded-3 mb-3 py-3"
-                    style="border:1.5px dashed #2a9e2a;background:#f0fdf0;color:#2a9e2a"
-                    @click="showCreateGroup = true">+ Crear grupo</button>
+            <button v-if="!showCreateGroup" class="create-group-btn" @click="showCreateGroup = true">
+              + Crear grupo
+            </button>
 
-            <!-- Create group form -->
-            <div v-else class="card rounded-4 border mb-3">
-              <div class="card-body p-3">
-                <p class="fw-bold mb-3">Nuevo grupo</p>
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                  <button v-for="e in GROUP_EMOJIS" :key="e"
-                          class="btn btn-sm rounded-3 p-1"
-                          :class="newGroupEmoji === e ? 'btn-success' : 'btn-light border'"
-                          style="width:36px;height:36px;font-size:17px"
-                          @click="newGroupEmoji = e">{{ e }}</button>
-                </div>
-                <input v-model="newGroupName" class="form-control mb-3"
-                       placeholder="Nombre del grupo" maxlength="24" />
-                <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.7px">
-                  Invitar jugadores
-                </p>
-                <div class="border rounded-3 overflow-hidden mb-3" style="max-height:180px;overflow-y:auto!important">
-                  <button v-for="p in ALL_PLAYERS" :key="'cgm-'+p.id"
-                          class="w-100 d-flex align-items-center gap-3 px-3 py-2 border-0 text-start"
-                          :class="newGroupMemberIds.has(p.id) ? 'bg-success bg-opacity-10' : 'bg-white'"
-                          @click="toggleNewMember(p.id)">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-black flex-shrink-0"
-                         :style="{ width:'30px', height:'30px', background: p.color+'22', border:'2px solid '+p.color, color:p.color, fontSize:'13px' }">
-                      {{ p.name.charAt(0) }}
-                    </div>
-                    <span class="flex-grow-1 fw-semibold" style="font-size:13px">{{ p.name }}</span>
-                    <span class="fw-black text-success" style="width:16px">{{ newGroupMemberIds.has(p.id) ? '✓' : '' }}</span>
-                  </button>
-                </div>
-                <div class="d-flex gap-2">
-                  <button class="btn btn-light border flex-fill fw-semibold" @click="cancelCreateGroup">Cancelar</button>
-                  <button class="btn btn-success flex-fill fw-bold"
-                          :disabled="!newGroupName.trim()" @click="submitCreateGroup">Crear</button>
-                </div>
+            <div v-else class="create-group-form">
+              <p class="player-name" style="margin-bottom:12px">Nuevo grupo</p>
+              <div class="emoji-row">
+                <button v-for="e in GROUP_EMOJIS" :key="e"
+                        class="emoji-btn" :class="{ selected: newGroupEmoji === e }"
+                        @click="newGroupEmoji = e">{{ e }}</button>
+              </div>
+              <input v-model="newGroupName" class="text-input" placeholder="Nombre del grupo" maxlength="24" />
+              <p class="section-label">Invitar jugadores</p>
+              <div class="player-list compact">
+                <button v-for="p in ALL_PLAYERS" :key="'cgm-'+p.id"
+                        class="player-row selectable" :class="{ selected: newGroupMemberIds.has(p.id) }"
+                        @click="toggleNewMember(p.id)">
+                  <div class="avatar sm" :style="{ background: p.color + '22', border: '2px solid ' + p.color, color: p.color }">
+                    {{ p.name.charAt(0) }}
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                  <span v-if="newGroupMemberIds.has(p.id)" class="check-mark">✓</span>
+                </button>
+              </div>
+              <div class="form-row">
+                <button class="cancel-btn" @click="cancelCreateGroup">Cancelar</button>
+                <button class="submit-btn" :disabled="!newGroupName.trim()" @click="submitCreateGroup">Crear</button>
               </div>
             </div>
 
-            <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">
-              Todos los grupos
-            </p>
-            <div class="list-group">
-              <div v-for="g in groups" :key="g.id"
-                   class="list-group-item d-flex align-items-center gap-3 py-2 px-3">
-                <span style="font-size:24px;flex-shrink:0">{{ g.emoji }}</span>
-                <div class="flex-grow-1 min-width-0">
-                  <div class="fw-bold text-truncate" style="font-size:14px">{{ g.name }}</div>
-                  <small class="text-muted">
+            <p class="section-label" :class="{ mt: !showCreateGroup }">Todos los grupos</p>
+            <div class="player-list">
+              <div v-for="g in groups" :key="g.id" class="player-row">
+                <span style="font-size:22px;flex-shrink:0">{{ g.emoji }}</span>
+                <div class="player-info">
+                  <div class="player-name">{{ g.name }}</div>
+                  <div class="player-sub">
                     👥 {{ groupMemberCount(g.id) || g.members }} ·
-                    <span :class="g.activeNow > 0 ? 'text-success fw-semibold' : ''">
+                    <span :style="{ color: g.activeNow > 0 ? '#2ecc71' : '#aaa' }">
                       {{ g.activeNow > 0 ? `● ${g.activeNow} activos` : '○ inactivo' }}
                     </span>
-                  </small>
+                  </div>
                 </div>
-                <button v-if="g.joined"
-                        class="btn btn-sm btn-outline-success rounded-pill fw-bold flex-shrink-0"
-                        @click="managingGroup = g">Gestionar</button>
-                <button v-else
-                        class="btn btn-sm btn-success rounded-pill fw-bold flex-shrink-0"
-                        @click="toggleJoin(g.id)">Unirse</button>
+                <button v-if="g.joined" class="outline-btn" @click="managingGroup = g">Gestionar</button>
+                <button v-else class="add-btn" @click="toggleJoin(g.id)">Unirse</button>
               </div>
             </div>
           </template>
-        </div>
-      </div>
-
-      <!-- Groups tab: select group to filter map -->
-      <div class="side-panel" :class="{ visible: tab === 'groups' && !playMode }">
-        <div class="overflow-auto p-3">
-          <p class="text-uppercase fw-bold mb-2" style="font-size:10px;color:#aaa;letter-spacing:.8px">
-            Filtrar por grupo
-          </p>
-          <div class="list-group">
-            <button class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 fw-semibold"
-                    :class="{ active: activeGroupFilter === null }"
-                    @click="activeGroupFilter = null; tab = 'general'">
-              <span style="font-size:20px">🌍</span>
-              <span>Todos (General)</span>
-            </button>
-            <button v-for="g in joinedGroups" :key="g.id"
-                    class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 fw-semibold"
-                    :class="{ active: activeGroupFilter === g.id }"
-                    @click="activeGroupFilter = g.id; tab = 'general'">
-              <span style="font-size:20px">{{ g.emoji }}</span>
-              <span class="flex-grow-1">{{ g.name }}</span>
-              <span class="badge border" style="background:#f4f4f6;color:#888;font-size:10px">
-                {{ g.members }} miembros
-              </span>
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -325,20 +246,22 @@ import { GetGroupsUseCase }  from '@/application/usecases/GetGroupsUseCase.js'
 import L from 'leaflet'
 
 // ── Injected from App.vue ──────────────────────────────────────────────
-const playMode = inject('playMode', ref(false))
-const navTab   = inject('navTab',   ref('map'))
+const playMode        = inject('playMode', ref(false))
+const navTab          = inject('navTab',   ref('map'))
+const showGroupPicker = inject('showGroupPicker', ref(false))
+const paused          = inject('gamePaused', ref(false))
+const currentPlayer   = inject('currentPlayer', ref(null))
 
-// ── Local tab (top pill: General / Grupos) ─────────────────────────────
-const tab       = ref('general')
-const friendTab = ref('amigos')  // tab inside the friends panel
+// ── Local state ────────────────────────────────────────────────────────
+const friendTab = ref('amigos')
 
 // ── Pause / summary state ──────────────────────────────────────────────
-const paused      = ref(false)
 const showSummary = ref(false)
 const statsApples = ref(0)
 const statsKm     = ref('0.00')
 const statsSpeed  = ref('0.0')
 const statsTime   = ref('0:00')
+const statsPoints = ref(0)
 
 let runStartTime  = null
 let runDistKm     = 0
@@ -346,6 +269,13 @@ let totalPtsWalked = 0
 
 function finishRun () {
   paused.value      = false
+  // Calculate points: 200 pts/km + 100 pts/apple
+  const earned = Math.round(parseFloat(statsKm.value) * 200) + statsApples.value * 100
+  statsPoints.value = earned
+  // Add to player profile
+  if (currentPlayer.value) {
+    currentPlayer.value.score = (currentPlayer.value.score || 0) + earned
+  }
   showSummary.value = true
   playMode.value    = false
 }
@@ -354,6 +284,11 @@ function closeSummary () {
   statsApples.value = 0
   runDistKm         = 0
   totalPtsWalked    = 0
+}
+
+function startPlay (groupId) {
+  showGroupPicker.value = false
+  playMode.value = true
 }
 
 // ── Data ───────────────────────────────────────────────────────────────
@@ -391,8 +326,6 @@ function addFriend (id) {
 
 const groups  = ref(GetGroupsUseCase.execute())
 const joinedGroups = computed(() => groups.value.filter(g => g.joined))
-
-// ── Per-group member tracking ──────────────────────────────────────────
 // Map<groupId, Set<playerId>>
 const groupMemberMap = ref(new Map([
   [1, new Set([1, 5])],
@@ -470,22 +403,33 @@ let leafletMap   = null
 let playerStates = []
 
 // ── Reactive food ──────────────────────────────────────────────────────
-const FOOD_COORDS = [
-  [41.3861, 2.1651], [41.3882, 2.1665], [41.3903, 2.1651],
-  [41.3882, 2.1594], [41.3861, 2.1700], [41.3930, 2.1651],
-  [41.3861, 2.1565], [41.3882, 2.1724], [41.3892, 2.1650],
-  [41.3870, 2.1665], [41.3903, 2.1680], [41.3917, 2.1594],
-  [41.3875, 2.1620], [41.3895, 2.1710], [41.3850, 2.1680],
-]
-const foods = []  // { lat, lng, marker, eaten }
+const foods = []  // { lat, lng, marker, eaten, routePts }
 
-function spawnFood (lat, lng) {
-  const html = `<div style="font-size:18px;line-height:1;filter:drop-shadow(0 1px 4px rgba(0,0,0,.3))">🍎</div>`
+function spawnFood (lat, lng, routePts = null) {
+  const html = `<div style="font-size:20px;line-height:1;filter:drop-shadow(0 1px 4px rgba(0,0,0,.3));transition:transform .15s">🍎</div>`
   const marker = L.marker([lat, lng], {
-    icon: L.divIcon({ html, className: '', iconSize: [20,20], iconAnchor: [10,10] }),
+    icon: L.divIcon({ html, className: '', iconSize: [22,22], iconAnchor: [11,11] }),
     zIndexOffset: 50,
   }).addTo(leafletMap)
-  return { lat, lng, marker, eaten: false }
+  return { lat, lng, marker, eaten: false, routePts }
+}
+
+// Spawn a food item some steps ahead of fromIdx on a given route
+function spawnFoodAhead (routePts, fromIdx) {
+  const offset = 15 + Math.floor(Math.random() * 35)
+  const idx = (fromIdx + offset) % routePts.length
+  const [lat, lng] = routePts[idx]
+  return spawnFood(lat, lng, routePts)
+}
+
+function popApple (marker) {
+  // Brief scale-up then remove
+  const el = marker.getElement()
+  if (el) {
+    el.style.transition = 'transform .18s ease, opacity .18s'
+    el.style.transform  = 'scale(1.8)'
+    el.style.opacity    = '0'
+  }
 }
 
 // ── Player defs ────────────────────────────────────────────────────────
@@ -526,14 +470,14 @@ async function fetchStreetRoute (wpts) {
   return pts
 }
 
-// Check if a lat/lng is within ~12m of a trail point
+// Check if a lat/lng is within ~20m of a trail point
 function nearTrail (lat, lng, trail) {
   const R  = 6371000
   const tl = (Math.PI / 180)
   for (const [tla, tln] of trail) {
     const dlat = (lat - tla) * tl
     const dlng = (lng - tln) * tl * Math.cos(lat * tl)
-    if (Math.sqrt(dlat*dlat + dlng*dlng) * R < 12) return true
+    if (Math.sqrt(dlat*dlat + dlng*dlng) * R < 20) return true
   }
   return false
 }
@@ -601,19 +545,7 @@ function checkDanger (la, ln) {
   }
 }
 
-// ── Group filter watcher ───────────────────────────────────────────────
-watch(activeGroupFilter, (gid) => {
-  playerStates.forEach(s => {
-    const visible = gid === null || s.groupIds.includes(gid)
-    if (visible) {
-      if (!leafletMap.hasLayer(s.marker)) s.marker.addTo(leafletMap)
-      if (!leafletMap.hasLayer(s.poly))   s.poly.addTo(leafletMap)
-    } else {
-      if (leafletMap.hasLayer(s.marker)) s.marker.remove()
-      if (leafletMap.hasLayer(s.poly))   s.poly.remove()
-    }
-  })
-})
+// ── Group filter watcher removed (map always shows all players) ───────
 
 const USER_WPTS = [[41.3892,2.1637],[41.3870,2.1637],[41.3870,2.1665],[41.3892,2.1665]]
 let userRoutePts = []
@@ -676,8 +608,17 @@ async function initMap () {
     return { marker, poly, finePts, ptIdx: startIdx, trail: [[lat, lng]], tailLen: 25, groupIds: p.groupIds }
   })
 
-  // Spawn food
-  FOOD_COORDS.forEach(([la, ln]) => foods.push(spawnFood(la, ln)))
+  // Spawn food ahead of each player (2 per NPC) and along user route (3)
+  playerStates.forEach((s, i) => {
+    foods.push(spawnFoodAhead(s.finePts, s.ptIdx))
+    foods.push(spawnFoodAhead(s.finePts, s.ptIdx + Math.floor(s.finePts.length / 3)))
+  })
+  if (userRoutePts.length) {
+    const step = Math.floor(userRoutePts.length / 4)
+    for (let i = 0; i < 4; i++) {
+      foods.push(spawnFoodAhead(userRoutePts, i * step))
+    }
+  }
 
   walkInterval = setInterval(() => {
     if (paused.value) return
@@ -696,10 +637,14 @@ async function initMap () {
           f.eaten = true
           f.marker.remove()
           s.tailLen = Math.min(s.tailLen + 6, 60)
-          // Respawn this food at its original position after 8s
+          // Respawn ahead of the eating player after 8s
           setTimeout(() => {
+            const offset = 15 + Math.floor(Math.random() * 35)
+            const idx = (s.ptIdx + offset) % s.finePts.length
+            const [rla, rln] = s.finePts[idx]
+            f.lat = rla; f.lng = rln
             f.eaten = false
-            f.marker = spawnFood(f.lat, f.lng).marker
+            f.marker = spawnFood(rla, rln, s.finePts).marker
           }, 8000)
         }
       })
@@ -770,12 +715,19 @@ watch(playMode, (on) => {
         if (f.eaten) return
         if (nearTrail(f.lat, f.lng, [[la, ln]])) {
           f.eaten = true
-          f.marker.remove()
+          popApple(f.marker)
+          const _f = f
+          setTimeout(() => { _f.marker.remove() }, 180)
           statsApples.value++
           userState.tailLen = Math.min(userState.tailLen + 6, 80)
+          // Respawn ahead of user after 8s
           setTimeout(() => {
+            const offset = 15 + Math.floor(Math.random() * 35)
+            const idx = (userState.ptIdx + offset) % userRoutePts.length
+            const [rla, rln] = userRoutePts[idx]
+            f.lat = rla; f.lng = rln
             f.eaten  = false
-            f.marker = spawnFood(f.lat, f.lng).marker
+            f.marker = spawnFood(rla, rln, userRoutePts).marker
           }, 8000)
         }
       })
@@ -823,57 +775,23 @@ onUnmounted(() => {
   inset: 0;
   z-index: 35;
   pointer-events: none;
-  border-radius: 4px;
-  transition: background .1s, border-color .1s;
-}
-.danger-flash.low  {
-  background: rgba(220,50,50,.10);
-  border: 3px solid rgba(220,50,50,.30);
-}
-.danger-flash.med  {
-  background: rgba(220,50,50,.22);
-  border: 4px solid rgba(220,50,50,.55);
-}
-.danger-flash.high {
-  background: rgba(220,50,50,.38);
-  border: 5px solid rgba(220,50,50,.80);
-  animation: pulse-danger .35s ease-out;
-}
-@keyframes pulse-danger {
-  0%   { background: rgba(220,50,50,.60); }
-  100% { background: rgba(220,50,50,.38); }
-}
-
-/* ── Tabs ── */
-.tabs {
-  flex-shrink: 0;
-  padding: 8px 18px 10px;
-  background: #fff;
-  border-bottom: 1px solid #f0f0f3;
-}
-.tab-pill-wrap {
   display: flex;
-  background: #f2f2f5;
-  border-radius: 10px;
-  padding: 3px;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 24px;
 }
-.tab-pill {
-  flex: 1;
-  padding: 7px 0;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
+.danger-flash.low  { background: rgba(220,50,50,.08); border: 3px solid rgba(220,50,50,.25); }
+.danger-flash.med  { background: rgba(220,50,50,.18); border: 4px solid rgba(220,50,50,.50); }
+.danger-flash.high { background: rgba(220,50,50,.30); border: 4px solid rgba(220,50,50,.72); }
+.danger-label {
   font-size: 13px;
-  font-weight: 600;
-  color: #888;
-  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: .2px;
+  padding: 6px 18px;
+  border-radius: 20px;
+  background: rgba(200,30,30,.88);
+  color: #fff;
   font-family: 'Inter', sans-serif;
-  transition: background .2s, color .2s, box-shadow .2s;
-}
-.tab-pill.active {
-  background: #fff;
-  color: #111;
-  box-shadow: 0 1px 4px rgba(0,0,0,.13);
 }
 
 /* ── Map content ── */
@@ -889,117 +807,323 @@ onUnmounted(() => {
   z-index: 0;
 }
 
-/* ── Play mode fullscreen ── */
-.home-view.play-mode {
-  position: fixed;
-  inset: 0;
-  z-index: 500;
-}
-.play-mode .tabs { display: none; }
-.play-mode .side-panel { transform: translateX(100%) !important; }
-
-/* ── Pause button ── */
-.pause-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 30;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(8px);
-  border: none;
-  box-shadow: 0 2px 16px rgba(0,0,0,.18);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #111;
-}
-.pause-btn svg { width: 22px; height: 22px; }
-.pause-btn:active { transform: scale(.91); }
-
 /* ── Pause / summary overlay ── */
 .pause-overlay {
   position: absolute;
   inset: 0;
   z-index: 40;
-  background: rgba(0,0,0,.45);
-  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,.5);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .pause-card {
   background: #fff;
-  border-radius: 22px;
-  padding: 28px 24px 20px;
+  border-radius: 16px;
+  padding: 24px 20px 18px;
   width: 88%;
-  max-width: 340px;
-  box-shadow: 0 8px 48px rgba(0,0,0,.22);
+  max-width: 320px;
 }
 .pause-title {
-  font-size: 20px;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 700;
   color: #111;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   text-align: center;
 }
 .pause-stats {
-  border-radius: 12px;
-  background: #f4f4f6;
-  padding: 12px 16px;
-  margin-bottom: 18px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
 }
 .stat-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 7px 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #f0f0f0;
 }
 .stat-row:last-child { border-bottom: none; }
-.stat-label { font-size: 13px; color: #888; font-weight: 500; }
-.stat-val   { font-size: 15px; color: #111; font-weight: 700; }
+.stat-label { font-size: 13px; color: #888; }
+.stat-val   { font-size: 14px; color: #111; font-weight: 600; }
+.stat-row-pts { background: #f6fff6; border-radius: 6px; margin-top: 4px; padding: 9px 0; }
+.stat-pts { color: #2a9e2a; font-size: 16px; }
 .pause-action {
   display: block;
   width: 100%;
-  padding: 14px;
-  border-radius: 14px;
+  padding: 13px;
+  border-radius: 10px;
   border: none;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
-  margin-top: 10px;
-  transition: opacity .15s;
+  margin-top: 8px;
 }
 .pause-action:active { opacity: .8; }
 .pause-action.continue { background: #2a9e2a; color: #fff; }
-.pause-action.finish   { background: #f4f4f6; color: #555; }
+.pause-action.finish   { background: #f0f0f0; color: #444; }
 
-/* Fade transition */
-.fade-enter-active, .fade-leave-active { transition: opacity .2s; }
-.fade-enter-from, .fade-leave-to       { opacity: 0; }
+/* ── Group picker ── */
+.picker-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  align-items: flex-end;
+}
+.picker-sheet {
+  background: #fff;
+  width: 100%;
+  border-radius: 16px 16px 0 0;
+  padding: 20px 16px 32px;
+}
+.picker-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+.picker-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 4px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+}
+.picker-option:active { background: #f6f6f6; }
+.picker-option:last-of-type { border-bottom: none; }
+.picker-emoji { font-size: 20px; }
+.picker-cancel {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
 
-/* ── Friends panel tabs: override Bootstrap nav-link active color ── */
-.nav-tabs .nav-link.active { color: #2a9e2a !important; border-bottom-color: #2a9e2a !important; }
-.nav-tabs .nav-link { color: #888; font-size: 14px; }
-
-/* ── Side panels (friends / groups filter) ── */
+/* ── Side panel (friends) ── */
 .side-panel {
   position: absolute;
   inset: 0;
   z-index: 10;
-  background: rgba(250,250,252,.97);
-  backdrop-filter: blur(18px);
+  background: #fff;
   overflow-y: hidden;
   display: flex;
   flex-direction: column;
-  -webkit-overflow-scrolling: touch;
   transform: translateX(100%);
-  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  transition: transform .25s ease;
 }
 .side-panel.visible { transform: translateX(0); }
+
+/* ── Panel header ── */
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+  background: #fff;
+}
+.panel-back-btn {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.panel-tabs {
+  display: flex;
+  flex: 1;
+}
+.panel-tab {
+  flex: 1;
+  padding: 14px 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: #999;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+.panel-tab.active {
+  color: #2a9e2a;
+  border-bottom-color: #2a9e2a;
+}
+
+/* ── Panel body ── */
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* ── Shared list items ── */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-bottom: 8px;
+}
+.section-label.mt { margin-top: 20px; }
+
+.player-list { display: flex; flex-direction: column; gap: 0; border: 1px solid #eee; border-radius: 10px; overflow: hidden; }
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+.player-row:last-child { border-bottom: none; }
+.player-row.muted { opacity: .8; }
+.player-row.selectable { border: none; cursor: pointer; width: 100%; text-align: left; font-family: 'Inter', sans-serif; }
+.player-row.selectable.selected { background: #f0fdf0; }
+.player-list.compact { max-height: 180px; overflow-y: auto; }
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.avatar.sm { width: 32px; height: 32px; font-size: 13px; }
+
+.player-info { flex: 1; min-width: 0; }
+.player-name { font-size: 14px; font-weight: 600; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-sub  { font-size: 12px; color: #999; margin-top: 1px; }
+
+.badge-food { font-size: 12px; color: #555; background: #f4f4f6; border: 1px solid #e8e8e8; border-radius: 6px; padding: 2px 7px; flex-shrink: 0; }
+.icon-btn { width: 26px; height: 26px; border-radius: 50%; background: #f4f4f6; border: none; font-size: 11px; color: #999; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.add-btn  { padding: 5px 12px; border-radius: 20px; border: 1.5px solid #2a9e2a; background: none; color: #2a9e2a; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0; font-family: 'Inter', sans-serif; }
+.outline-btn { padding: 5px 12px; border-radius: 20px; border: 1.5px solid #ccc; background: none; color: #555; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0; font-family: 'Inter', sans-serif; }
+.check-mark { font-size: 14px; font-weight: 700; color: #2a9e2a; width: 18px; text-align: center; flex-shrink: 0; }
+.empty-msg  { text-align: center; color: #aaa; font-size: 13px; padding: 16px 0; }
+
+/* ── Group card ── */
+.group-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+.back-link {
+  background: none;
+  border: none;
+  color: #2a9e2a;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 14px 0;
+  display: block;
+  font-family: 'Inter', sans-serif;
+}
+.danger-btn {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1.5px solid #e74c3c;
+  background: none;
+  color: #e74c3c;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Create group form ── */
+.create-group-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1.5px dashed #2a9e2a;
+  background: #f8fff8;
+  color: #2a9e2a;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+  font-family: 'Inter', sans-serif;
+}
+.create-group-form {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.emoji-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.emoji-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1.5px solid #e8e8e8;
+  background: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.emoji-btn.selected { border-color: #2a9e2a; background: #f0fdf0; }
+.text-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  margin-bottom: 12px;
+  outline: none;
+  box-sizing: border-box;
+}
+.text-input:focus { border-color: #2a9e2a; }
+.form-row { display: flex; gap: 8px; margin-top: 12px; }
+.cancel-btn { flex: 1; padding: 11px; border-radius: 8px; border: 1px solid #ddd; background: #fff; color: #666; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+.submit-btn { flex: 1; padding: 11px; border-radius: 8px; border: none; background: #2a9e2a; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+.submit-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+/* Fade transition */
+.fade-enter-active, .fade-leave-active { transition: opacity .2s; }
+.fade-enter-from, .fade-leave-to       { opacity: 0; }
 </style>

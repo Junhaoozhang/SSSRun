@@ -1,69 +1,73 @@
 <template>
-  <!-- Bottom nav area: SVG curved bar + canvas snake + PLAY button -->
-  <div class="nav-area">
+  <!-- Bottom nav area: canvas snake + nav buttons OR pause button -->
+  <div class="nav-area" :class="{ 'play-mode': playMode }">
 
-    <!-- Canvas snake (z-index above SVG, below PLAY button) -->
-    <canvas ref="canvasRef" class="snake-canvas" />
-
-    <!--
-      SVG curved nav bar
-    -->
-    <svg class="nav-svg" :viewBox="`0 0 ${containerWidth} 88`" preserveAspectRatio="none"
-         xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="nav-sh" x="-2%" y="-80%" width="104%" height="220%">
-          <feDropShadow dx="0" dy="-3" stdDeviation="8"
-                        flood-color="rgba(0,0,0,0.08)" />
-        </filter>
-      </defs>
-      <path :d="navPathD" fill="white" filter="url(#nav-sh)" />
-    </svg>
-
-    <!-- Nav buttons -->
-    <div class="nav-btns">
-      <button
-        class="nav-btn"
-        :class="{ active: activeTab === 'friends' }"
-        @click="$emit('tab-change', 'friends')"
-      >
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        <span>Amigos</span>
-      </button>
-
-      <div class="nav-notch" />
-
-      <button
-        class="nav-btn"
-        :class="{ active: activeTab === 'leaderboard' }"
-        @click="$emit('tab-change', 'leaderboard')"
-      >
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="18" y="3"  width="4" height="18" rx="1"/>
-          <rect x="10" y="8"  width="4" height="13" rx="1"/>
-          <rect x="2"  y="13" width="4" height="8"  rx="1"/>
-        </svg>
-        <span>Top</span>
-      </button>
-    </div>
-
-    <!-- PLAY button -->
-    <button class="play-btn" @click="$emit('play')" aria-label="Jugar">
-      <div class="play-tri" />
+    <!-- Pause mode: big pause button filling the bar -->
+    <button v-if="playMode" class="pause-bar-btn" @click="$emit('pause')" aria-label="Pausar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#222"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="6" y="4" width="4" height="16" rx="1"/>
+        <rect x="14" y="4" width="4" height="16" rx="1"/>
+      </svg>
+      <span>Pausar</span>
     </button>
+
+    <template v-else>
+      <!-- Canvas snake -->
+      <canvas ref="canvasRef" class="snake-canvas" />
+
+      <!-- Flat nav bar background -->
+      <div class="nav-bar-bg" />
+
+      <!-- Nav buttons -->
+      <div class="nav-btns">
+        <button
+          class="nav-btn"
+          :class="{ active: activeTab === 'friends' }"
+          @click="$emit('tab-change', 'friends')"
+        >
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Amigos</span>
+        </button>
+
+        <div class="nav-spacer" />
+
+        <button
+          class="nav-btn"
+          :class="{ active: activeTab === 'leaderboard' }"
+          @click="$emit('tab-change', 'leaderboard')"
+        >
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="18" y="3"  width="4" height="18" rx="1"/>
+            <rect x="10" y="8"  width="4" height="13" rx="1"/>
+            <rect x="2"  y="13" width="4" height="8"  rx="1"/>
+          </svg>
+          <span>Top</span>
+        </button>
+      </div>
+
+      <!-- PLAY button -->
+      <button class="play-btn" @click="$emit('play')" aria-label="Jugar">
+        <div class="play-tri" />
+      </button>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-defineProps({ activeTab: { type: String, default: 'map' } })
-defineEmits(['tab-change', 'play'])
+defineProps({
+  activeTab: { type: String, default: 'map' },
+  playMode:  { type: Boolean, default: false },
+})
+defineEmits(['tab-change', 'play', 'pause'])
 
 const containerWidth = ref(430)
 
@@ -306,6 +310,42 @@ onUnmounted(() => {
   overflow: visible;
 }
 
+/* ── Play mode: big pause button ── */
+.nav-area.play-mode {
+  height: 64px;
+  overflow: hidden;
+}
+
+.pause-bar-btn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #f5c000;
+  border: none;
+  color: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  letter-spacing: .3px;
+  border-top: 1px solid #d4a500;
+}
+.pause-bar-btn:active { background: #e0b000; }
+
+/* Flat nav bar background */
+.nav-bar-bg {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  border-top: 1px solid #eee;
+  z-index: 20;
+}
+
 /* Snake canvas — overflows above the nav bar */
 .snake-canvas {
   position: absolute;
@@ -313,21 +353,11 @@ onUnmounted(() => {
   right: 0;
   bottom: 0;
   width: 100%;
-  height: 130%;   /* extends 30% above the nav bar */
+  height: 130%;
   top: auto;
-  z-index: 50;    /* above SVG, buttons AND the PLAY btn */
+  z-index: 50;
   pointer-events: none;
   overflow: visible;
-}
-
-/* SVG curved bar */
-.nav-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 20;
-  pointer-events: none;
 }
 
 /* Nav buttons */
@@ -349,8 +379,7 @@ onUnmounted(() => {
   background: none;
   border: none;
   cursor: pointer;
-  color: #c0c0c8;
-  transition: color .2s;
+  color: #aaa;
   font-family: 'Inter', sans-serif;
 }
 .nav-btn.active { color: #2a9e2a; }
@@ -363,37 +392,32 @@ onUnmounted(() => {
 .nav-btn span {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: .2px;
 }
 
-.nav-notch {
-  width: 96px;
+.nav-spacer {
+  width: 88px;
   flex-shrink: 0;
 }
 
 /* PLAY button */
 .play-btn {
   position: absolute;
-  bottom: 12px;
+  bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: linear-gradient(150deg, #34c534, #1a841a);
-  border: 4px solid #fff;
-  box-shadow: 0 6px 24px rgba(42,158,42,.38), 0 2px 8px rgba(0,0,0,.1);
+  background: #2a9e2a;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,.15);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 30;
-  transition: transform .12s ease, box-shadow .2s ease;
 }
-.play-btn:active {
-  transform: translateX(-50%) scale(.91);
-  box-shadow: 0 2px 10px rgba(42,158,42,.25);
-}
+.play-btn:active { transform: translateX(-50%) scale(.93); }
 
 /* Triangle play icon */
 .play-tri {
@@ -401,7 +425,7 @@ onUnmounted(() => {
   height: 0;
   border-top: 11px solid transparent;
   border-bottom: 11px solid transparent;
-  border-left: 19px solid rgba(255,255,255,.95);
+  border-left: 19px solid #fff;
   margin-left: 5px;
 }
 </style>
