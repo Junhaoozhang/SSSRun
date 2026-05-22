@@ -170,6 +170,8 @@ watch(() => props.players, () => {
   width: 100%;
   height: 100%;
   display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .map-badge {
@@ -180,27 +182,25 @@ watch(() => props.players, () => {
   align-items: center;
   gap: 6px;
   background: rgba(10, 10, 25, 0.85);
-  border: 1px solid rgba(57, 255, 20, 0.35);
+  border: 2px solid #39FF14;
   padding: 5px 11px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  font-family: 'Nunito', sans-serif;
+  font-size: 7px;
+  font-weight: 400;
+  color: #39FF14;
+  font-family: 'Press Start 2P', monospace;
   backdrop-filter: blur(4px);
+  image-rendering: pixelated;
 }
 
 .badge-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+  width: 8px;
+  height: 8px;
   background: #39FF14;
-  box-shadow: 0 0 6px #39FF14;
-  animation: blink 1.5s ease-in-out infinite;
+  animation: blink 1.2s step-end infinite;
 }
 
 @keyframes blink {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.2; }
+  50% { opacity: 0.15; }
 }
 </style>

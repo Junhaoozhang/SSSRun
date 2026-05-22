@@ -25,36 +25,37 @@ const initial = computed(() => props.player.name?.charAt(0).toUpperCase() ?? 'U'
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
-  background: #fff;
-  border-bottom: 1px solid #eee;
+  padding: clamp(10px, 1.8vw, 14px) clamp(12px, 2vw, 18px);
+  background: #F2F0EF;
+  border-bottom: 2px solid #408201;
   flex-shrink: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Press Start 2P', monospace;
 }
 .app-title {
   flex: 1;
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -.5px;
-  color: #111;
+  font-size: clamp(12px, 2vw, 18px);
+  font-weight: 400;
+  color: #408201;
+  letter-spacing: 0;
 }
 .app-title em {
   font-style: normal;
-  color: #2a9e2a;
+  color: #408201;
 }
 .score-badge {
-  font-size: 12px;
-  font-weight: 600;
-  color: #444;
-  background: #f4f4f5;
-  border: 1px solid #eee;
-  border-radius: 20px;
-  padding: 5px 11px;
+  font-size: clamp(7px, 1.1vw, 11px);
+  font-weight: 400;
+  color: #408201;
+  background: rgba(64, 130, 1, 0.06);
+  border: 1px solid #408201;
+  padding: clamp(6px, 1vw, 8px) clamp(8px, 1.4vw, 12px);
+  letter-spacing: 0.25px;
+  image-rendering: pixelated;
 }
 .avatar-btn {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: clamp(42px, 7vw, 56px);
+  height: clamp(42px, 7vw, 56px);
   background: none;
   border: none;
   padding: 0;
@@ -63,27 +64,30 @@ const initial = computed(() => props.player.name?.charAt(0).toUpperCase() ?? 'U'
 }
 .avatar-btn:active { opacity: .85; }
 .avatar-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #2a9e2a;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 800;
+  width: clamp(42px, 7vw, 56px);
+  height: clamp(42px, 7vw, 56px);
+  border-radius: 0;
+  background: #408201;
+  color: #F2F0EF;
+  font-size: clamp(15px, 2.5vw, 22px);
+  font-weight: 400;
+  font-family: 'Press Start 2P', monospace;
   display: flex;
   align-items: center;
   justify-content: center;
+  image-rendering: pixelated;
 }
 .level-badge {
   position: absolute;
-  top: -2px;
-  right: -4px;
-  background: #f5a623;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  border-radius: 10px;
-  padding: 2px 5px;
-  font-family: 'Inter', sans-serif;
+  top: -3px;
+  right: -5px;
+  background: #d8b24c;
+  color: #F2F0EF;
+  font-size: clamp(7px, 1vw, 11px);
+  font-weight: 400;
+  padding: clamp(3px, 0.7vw, 5px) clamp(5px, 0.9vw, 8px);
+  font-family: 'Press Start 2P', monospace;
+  image-rendering: pixelated;
+  border: 1px solid #F2F0EF;
 }
 </style>

@@ -1,17 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 /* ── Bootstrap CSS variable overrides ───────────────────────────── */
 :root {
   --bs-font-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
   --bs-body-font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  --bs-success: #2a9e2a;
-  --bs-success-rgb: 42, 158, 42;
-  --bs-success-bg-subtle: #f0fdf0;
-  --bs-success-border-subtle: #c3e6c3;
-  --bs-border-color: #ebebef;
-  --bs-border-radius: 0.5rem;
-  --bs-border-radius-lg: 0.75rem;
-  --bs-border-radius-xl: 1rem;
+  --bs-success: #2fca4d;
+  --bs-success-rgb: 47, 202, 77;
+  --bs-success-bg-subtle: #101817;
+  --bs-success-border-subtle: #233a2a;
+  --bs-border-color: #20202d;
+  --bs-border-radius: 0;
+  --bs-border-radius-lg: 0;
+  --bs-border-radius-xl: 0;
 }
 
 /* ── App shell ───────────────────────────────────────────────────── */
@@ -20,8 +21,9 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  background: #e5e5ea;
-  -webkit-font-smoothing: antialiased;
+  background: #0b0b12;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -32,10 +34,76 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #fff;
+  background: #0d0d14;
   position: relative;
-  box-shadow: 0 0 60px rgba(0,0,0,.18);
+  box-shadow: 0 0 0 3px #2fca4d;
 }
+
+/* ── Pixel art global settings ──────────────────────────────────── */
+canvas {
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+/* Pixel-art round play button */
+.pixel-play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: clamp(44px, 7.2vw, 56px);
+  aspect-ratio: 1 / 1; /* mantiene círculo perfecto */
+  
+  padding: 0;
+  border-radius: 50%;
+
+  background: #39FF14;
+  border: 4px solid #1a7a1a;
+
+  box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+
+  cursor: pointer;
+  image-rendering: pixelated;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.pixel-play-btn:active {
+  transform: scale(.93) translateY(2px); 
+  box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+}
+
+.pixel-play-svg {
+  width: 45%;
+  height: 45%;
+  display: block;
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
+  transform: translateX(8%);
+}
+
+.pixel-play-btn .btn-label {
+  margin-left: 8px;
+  font-size: clamp(12px, 1.8vw, 14px);
+  font-weight: 700;
+  color: #101817; 
+  text-shadow: none;
+}
+
+/* Override */
+.pause-action.pixel-play-btn {
+  width: clamp(44px, 7.2vw, 56px) !important;
+  aspect-ratio: 1 / 1 !important;
+  height: auto !important;
+
+  padding: 0 !important;
+  border-radius: 50% !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.pause-action.pixel-play-btn .btn-label { margin-left: 10px; }
 
 /* ── Bootstrap btn-success uses our green ─────────────────────── */
 .btn-success {
@@ -72,8 +140,64 @@ html, body {
 /* ── Scrollbar ───────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(42,158,42,.25); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(47,202,77,.28); border-radius: 0; }
 
 /* ── Leaflet fixes ───────────────────────────────────────────────── */
 .leaflet-control-attribution { font-size: 8px !important; }
 .leaflet-pane, .leaflet-top, .leaflet-bottom { z-index: 400 !important; }
+
+.food-marker {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.food-marker .food-apple {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
+.food-marker .food-apple__body,
+.food-marker .food-apple__shine,
+.food-marker .food-apple__leaf,
+.food-marker .food-apple__stem {
+  position: absolute;
+  display: block;
+}
+
+.food-marker .food-apple__body {
+  left: 6px;
+  top: 8px;
+  width: 14px;
+  height: 14px;
+  background: #d64b4b;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.food-marker .food-apple__shine {
+  left: 9px;
+  top: 11px;
+  width: 4px;
+  height: 4px;
+  background: #f09b7e;
+}
+
+.food-marker .food-apple__leaf {
+  left: 14px;
+  top: 4px;
+  width: 7px;
+  height: 4px;
+  background: #4d7a3f;
+  transform: rotate(-18deg);
+  transform-origin: left center;
+}
+
+.food-marker .food-apple__stem {
+  left: 12px;
+  top: 3px;
+  width: 2px;
+  height: 5px;
+  background: #5a3d2b;
+}

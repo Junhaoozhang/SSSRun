@@ -4,17 +4,42 @@
 
     <!-- Pause mode: big pause button filling the bar -->
     <button v-if="playMode" class="pause-bar-btn" @click="$emit('pause')" aria-label="Pausar">
+      <!-- Small snake toggle inside pause mode too -->
+      <div class="snake-toggle-corner" @click.stop>
+        <button
+          class="snake-toggle-mini"
+          :class="{ off: snakeDisabled }"
+          @click="snakeDisabled = !snakeDisabled"
+          title="Activar/desactivar serpiente"
+        >
+          <span class="toggle-label">{{ snakeDisabled ? 'OFF' : 'ON' }}</span>
+          <span class="toggle-icon">🐍</span>
+        </button>
+      </div>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#222"
            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <rect x="6" y="4" width="4" height="16" rx="1"/>
         <rect x="14" y="4" width="4" height="16" rx="1"/>
       </svg>
-      <span>Pausar</span>
+      <span class="pause-label">Pausar</span>
     </button>
 
     <template v-else>
-      <!-- Canvas snake -->
-      <canvas ref="canvasRef" class="snake-canvas" />
+      <!-- Canvas snake (v-show keeps canvas in DOM so animation continues) -->
+      <canvas v-show="!snakeDisabled" ref="canvasRef" class="snake-canvas" />
+
+      <!-- Small snake toggle in bottom-right corner of map -->
+      <div class="snake-toggle-corner">
+        <button
+          class="snake-toggle-mini"
+          :class="{ off: snakeDisabled }"
+          @click="snakeDisabled = !snakeDisabled"
+          title="Activar/desactivar serpiente"
+        >
+          <span class="toggle-label">{{ snakeDisabled ? 'OFF' : 'ON' }}</span>
+          <span class="toggle-icon">🐍</span>
+        </button>
+      </div>
 
       <!-- Flat nav bar background -->
       <div class="nav-bar-bg" />
@@ -53,8 +78,14 @@
       </div>
 
       <!-- PLAY button -->
-      <button class="play-btn" @click="$emit('play')" aria-label="Jugar">
-        <div class="play-tri" />
+      <button class="pixel-play-btn start-play-btn" @click="$emit('play')" aria-label="Jugar">
+        <svg class="pixel-play-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" role="img">
+          <g shape-rendering="crispEdges" fill="#101817">
+            <rect x="5" y="3" width="2" height="10" />
+            <rect x="7" y="5" width="2" height="6" />
+            <rect x="9" y="7" width="2" height="2" />
+          </g>
+        </svg>
       </button>
     </template>
   </div>
@@ -70,6 +101,7 @@ defineProps({
 defineEmits(['tab-change', 'play', 'pause'])
 
 const containerWidth = ref(430)
+const snakeDisabled  = ref(false)
 
 const navPathD = computed(() => {
   const w = containerWidth.value
@@ -86,11 +118,11 @@ const snakePathD = computed(() => {
 const canvasRef = ref(null)
 const N_SAMPLES = 700
 const HEAD_R    = 10
-const BODY_W    = 14   // width of the body block (polyline stroke)
+const BODY_W    = 12   // width of the body block (polyline stroke)
 const SEG_R     = 7    // radius of food apple drawn on nav canvas
 const N_BODY    = 18   // fixed number of body segments shown (doesn't change visually)
 const SEG_GAP   = 14   // spacing between segment positions
-const SPEED     = 0.56 // 2x faster
+const SPEED     = 0.112 // 0.2x slower
 
 let ctx, hpath, totalLen
 let pathPts   = []
@@ -173,44 +205,23 @@ function getDir (idx) {
 
 function drawHead (x, y, idx) {
   const { nx, ny, px, py } = getDir(idx)
-  // Glow
-  ctx.save()
-  ctx.shadowColor = 'rgba(42,158,42,0.55)'
-  ctx.shadowBlur  = 10
-  ctx.beginPath(); ctx.arc(x, y, HEAD_R, 0, Math.PI * 2)
-  ctx.fillStyle = '#2a9c2a'; ctx.fill()
-  ctx.restore()
-  // Eyes
-  const er = 2.4
-  ;[[-1],[1]].forEach(([s]) => {
-    const ex = x + nx * HEAD_R * .38 + px * s * HEAD_R * .56
-    const ey = y + ny * HEAD_R * .38 + py * s * HEAD_R * .56
-    ctx.beginPath(); ctx.arc(ex, ey, er, 0, Math.PI*2)
-    ctx.fillStyle = '#fff'; ctx.fill()
-    ctx.beginPath(); ctx.arc(ex + nx*.9, ey + ny*.9, er*.58, 0, Math.PI*2)
-    ctx.fillStyle = '#111'; ctx.fill()
-  })
-  // Tongue
-  const tb = { x: x + nx*(HEAD_R-.3), y: y + ny*(HEAD_R-.3) }
-  const tt = { x: tb.x + nx*5.5, y: tb.y + ny*5.5 }
-  ctx.strokeStyle = '#e53935'; ctx.lineWidth = 1.4; ctx.lineCap = 'round'
-  ctx.beginPath(); ctx.moveTo(tb.x,tb.y); ctx.lineTo(tt.x,tt.y); ctx.stroke()
-  ctx.beginPath()
-  ctx.moveTo(tt.x,tt.y); ctx.lineTo(tt.x+nx*3.5+px*3, tt.y+ny*3.5+py*3)
-  ctx.moveTo(tt.x,tt.y); ctx.lineTo(tt.x+nx*3.5-px*3, tt.y+ny*3.5-py*3)
-  ctx.stroke()
+  ctx.fillStyle = '#408201'
+  ctx.fillRect(Math.round(x - HEAD_R), Math.round(y - HEAD_R), HEAD_R * 2, HEAD_R * 2)
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(Math.round(x + nx * 2 + px * 3 - 2), Math.round(y + ny * 2 + py * 3 - 2), 3, 3)
+  ctx.fillRect(Math.round(x + nx * 2 - px * 3 - 2), Math.round(y + ny * 2 - py * 3 - 2), 3, 3)
+  ctx.fillStyle = '#408201'
+  ctx.fillRect(Math.round(x + nx * HEAD_R), Math.round(y + ny * HEAD_R), 4, 2)
 }
 
 function drawApple (pt) {
   const r = SEG_R * .95
-  ctx.beginPath(); ctx.arc(pt.x,pt.y,r,0,Math.PI*2)
-  ctx.fillStyle = '#e53935'; ctx.fill()
-  ctx.beginPath(); ctx.arc(pt.x-r*.30,pt.y-r*.28,r*.30,0,Math.PI*2)
-  ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill()
-  ctx.strokeStyle = '#33691e'; ctx.lineWidth = 1.5; ctx.lineCap = 'round'
-  ctx.beginPath(); ctx.moveTo(pt.x,pt.y-r); ctx.lineTo(pt.x+2.5,pt.y-r-4.5); ctx.stroke()
-  ctx.fillStyle = '#56c75c'
-  ctx.beginPath(); ctx.ellipse(pt.x+3.5,pt.y-r-3,3.2,1.5,-.55,0,Math.PI*2); ctx.fill()
+  ctx.fillStyle = '#d64b4b'
+  ctx.fillRect(Math.round(pt.x - r), Math.round(pt.y - r), Math.round(r * 2), Math.round(r * 2))
+  ctx.fillStyle = '#f09b7e'
+  ctx.fillRect(Math.round(pt.x - r + 2), Math.round(pt.y - r + 2), 3, 3)
+  ctx.fillStyle = '#4d7a3f'
+  ctx.fillRect(Math.round(pt.x - 1), Math.round(pt.y - r - 3), 2, 4)
 }
 
 function loop () {
@@ -250,34 +261,23 @@ function loop () {
     if (pathPts[si]) bodyPts.push(pathPts[si])
   }
   if (bodyPts.length > 1) {
-    // Outer glow
-    ctx.save()
-    ctx.shadowColor = 'rgba(42,158,42,0.35)'
-    ctx.shadowBlur  = 8
     ctx.beginPath()
     ctx.moveTo(bodyPts[0].x, bodyPts[0].y)
     bodyPts.forEach(p => ctx.lineTo(p.x, p.y))
-    ctx.strokeStyle = '#1a6e1a'
-    ctx.lineWidth   = BODY_W + 4
-    ctx.lineCap     = 'round'
-    ctx.lineJoin    = 'round'
+    ctx.strokeStyle = '#2a5a00'
+    ctx.lineWidth   = BODY_W + 3
+    ctx.lineCap     = 'butt'
+    ctx.lineJoin    = 'miter'
     ctx.stroke()
-    ctx.restore()
-    // Main body
+
     ctx.beginPath()
     ctx.moveTo(bodyPts[0].x, bodyPts[0].y)
     bodyPts.forEach(p => ctx.lineTo(p.x, p.y))
-    ctx.strokeStyle = '#2a9c2a'
+    ctx.strokeStyle = '#408201'
     ctx.lineWidth   = BODY_W
-    ctx.lineCap     = 'round'
-    ctx.lineJoin    = 'round'
+    ctx.lineCap     = 'butt'
+    ctx.lineJoin    = 'miter'
     ctx.stroke()
-    // Scale texture: small dots along body
-    bodyPts.forEach((p, i) => {
-      if (i % 3 !== 0) return
-      ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, Math.PI * 2)
-      ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fill()
-    })
   }
 
   // Draw head on top
@@ -287,6 +287,7 @@ function loop () {
 
 onMounted(() => {
   ctx = canvasRef.value.getContext('2d')
+  ctx.imageSmoothingEnabled = false
   resizeCanvas() // This handles both containerWidth sizing and buildHelperPath
   setTimeout(resizeCanvas, 350)
   window.addEventListener('resize', resizeCanvas)
@@ -306,7 +307,7 @@ onUnmounted(() => {
   flex-shrink: 0;
   position: relative;
   height: 88px;
-  z-index: 100;
+  z-index: 500;
   overflow: visible;
 }
 
@@ -321,28 +322,29 @@ onUnmounted(() => {
   inset: 0;
   width: 100%;
   height: 100%;
-  background: #f5c000;
+  background: #F2F0EF;
   border: none;
-  color: #222;
+  border-top: 2px solid #408201;
+  color: #408201;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  font-size: 16px;
-  font-weight: 700;
-  font-family: 'Inter', sans-serif;
+  gap: clamp(8px, 1.2vw, 12px);
+  font-size: clamp(10px, 1.5vw, 14px);
+  font-weight: 400;
+  font-family: 'Press Start 2P', monospace;
   cursor: pointer;
-  letter-spacing: .3px;
-  border-top: 1px solid #d4a500;
+  letter-spacing: 2px;
+  image-rendering: pixelated;
 }
-.pause-bar-btn:active { background: #e0b000; }
+.pause-bar-btn:active { background: #0f0f1a; }
 
 /* Flat nav bar background */
 .nav-bar-bg {
   position: absolute;
   inset: 0;
-  background: #fff;
-  border-top: 1px solid #eee;
+  background: #F2F0EF;
+  border-top: 2px solid #408201;
   z-index: 20;
 }
 
@@ -355,7 +357,7 @@ onUnmounted(() => {
   width: 100%;
   height: 130%;
   top: auto;
-  z-index: 50;
+  z-index: 22;
   pointer-events: none;
   overflow: visible;
 }
@@ -367,7 +369,7 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-end;
   padding: 0 16px 10px;
-  z-index: 24;
+  z-index: 20;
 }
 
 .nav-btn {
@@ -375,57 +377,82 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   background: none;
   border: none;
   cursor: pointer;
-  color: #aaa;
-  font-family: 'Inter', sans-serif;
+  color: #5a5a68;
+  font-family: 'Press Start 2P', monospace;
 }
-.nav-btn.active { color: #2a9e2a; }
+.nav-btn.active { color: #408201; }
+.nav-btn.active .nav-icon { stroke: #408201; }
 
 .nav-icon {
-  width: 22px;
-  height: 22px;
+  width: clamp(24px, 4vw, 34px);
+  height: clamp(24px, 4vw, 34px);
 }
 
 .nav-btn span {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: clamp(7px, 1.1vw, 11px);
+  font-weight: 400;
+  letter-spacing: 0.5px;
 }
 
 .nav-spacer {
-  width: 88px;
+  width: clamp(72px, 12vw, 100px);
   flex-shrink: 0;
 }
 
-/* PLAY button */
-.play-btn {
+/* START PLAY button (override to position it at the bottom center) */
+.start-play-btn {
   position: absolute;
-  bottom: 10px;
+  bottom: 6px;
   left: 50%;
   transform: translateX(-50%);
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: #2a9e2a;
-  border: 3px solid #fff;
-  box-shadow: 0 2px 12px rgba(0,0,0,.15);
-  cursor: pointer;
+  width: clamp(60px, 10vw, 84px);
+  height: clamp(60px, 10vw, 84px);
+  z-index: 26;
+}
+.start-play-btn:active { transform: translateX(-50%) scale(.93); }
+
+/* Snake toggle: small button in bottom-right corner inside map area */
+.snake-toggle-corner {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  z-index: 25;
+}
+.snake-toggle-mini {
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 30;
+  gap: 4px;
+  background: rgba(242, 240, 239, 0.92);
+  border: 1.5px solid #408201;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: #408201;
+  image-rendering: pixelated;
+  transition: background 0.15s;
 }
-.play-btn:active { transform: translateX(-50%) scale(.93); }
-
-/* Triangle play icon */
-.play-tri {
-  width: 0;
-  height: 0;
-  border-top: 11px solid transparent;
-  border-bottom: 11px solid transparent;
-  border-left: 19px solid #fff;
-  margin-left: 5px;
+.snake-toggle-mini.off {
+  border-color: #d64b4b;
+  color: #d64b4b;
+}
+.snake-toggle-mini:hover {
+  background: rgba(64, 130, 1, 0.12);
+}
+.snake-toggle-mini:active {
+  transform: scale(0.93);
+}
+.toggle-icon {
+  font-size: 18px;
+}
+.toggle-label {
+  font-size: 16px;
+  font-weight: 400;
 }
 </style>

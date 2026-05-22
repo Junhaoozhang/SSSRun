@@ -16,6 +16,11 @@
       <div class="hud-pill">⚡ {{ stats.speed.toFixed(1) }} m/s</div>
     </div>
 
+    <!-- Snake movement toggle -->
+    <button class="snake-toggle" :class="{ off: !snakeMoving }" @click="toggleSnake" title="Activar/desactivar serpiente">
+      {{ snakeMoving ? '🐍 ON' : '🐍 OFF' }}
+    </button>
+
     <!-- PAUSE button (shown when playing) -->
     <button v-if="!isPaused" class="pause-bar" @click="pause">
       <span class="pause-icon">⏸</span>
@@ -46,9 +51,14 @@
 
           <!-- Ouroboros buttons -->
           <div class="ouroboros-row">
-            <button class="ouroboros-btn btn-resume" @click="resume">
-              <OuroborosRing :color="'#39FF14'" />
-              <span class="ouro-icon">▶</span>
+            <button class="pixel-play-btn" @click="resume" aria-label="Reanudar">
+              <svg class="pixel-play-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" role="img">
+                <g shape-rendering="crispEdges" fill="#101817">
+                  <rect x="5" y="3" width="2" height="10" />
+                  <rect x="7" y="5" width="2" height="6" />
+                  <rect x="9" y="7" width="2" height="2" />
+                </g>
+              </svg>
             </button>
             <button class="ouroboros-btn btn-stop" @click="stopGame">
               <OuroborosRing :color="'#ff4444'" />
@@ -69,6 +79,7 @@ import OuroborosRing from '@/presentation/components/OuroborosRing.vue'
 const router    = useRouter()
 const canvasRef = ref(null)
 const isPaused  = ref(false)
+const snakeMoving = ref(true)
 
 const stats = reactive({ food: 0, km: 0, speed: 2.8 })
 
@@ -86,104 +97,93 @@ let foodItems = []
 let cols = 0
 let rows = 0
 
-// ── City map drawing ──────────────────────────────────────────────────────────
-function drawMap (w, h) {
-  ctx.fillStyle = '#1a1a2e'
+function toggleSnake() {
+  snakeMoving.value = !snakeMoving.value
+}
+
+// ── City map drawing (pixel-art style) ───────────────────────────────────────
+function drawMap(w, h) {
+  ctx.imageSmoothingEnabled = false
+  ctx.fillStyle = '#F2F0EF'
   ctx.fillRect(0, 0, w, h)
 
-  const BLOCK = 80
-  const ROAD  = 20
+  const BLOCK = 64
+  const ROAD  = 24
   const STEP  = BLOCK + ROAD
 
-  // Buildings
+  // Buildings – pixel blocks
   for (let bx = 0; bx < w + STEP; bx += STEP) {
     for (let by = 0; by < h + STEP; by += STEP) {
-      ctx.fillStyle = '#16213e'
+      ctx.fillStyle = '#e0ddd9'
       ctx.fillRect(bx, by, BLOCK, BLOCK)
 
-      // Windows
-      ctx.fillStyle = 'rgba(255,225,80,0.25)'
-      for (let wx = 0; wx < 3; wx++) {
-        for (let wy = 0; wy < 3; wy++) {
-          const lit = Math.random() > 0.35
-          if (lit) ctx.fillRect(bx + 8 + wx * 22, by + 8 + wy * 22, 10, 10)
-        }
-      }
+      ctx.fillStyle = 'rgba(64, 130, 1, 0.10)'
+      ctx.fillRect(bx + 10, by + 10, 6, 6)
+      ctx.fillRect(bx + 26, by + 18, 6, 6)
+      ctx.fillRect(bx + 42, by + 10, 6, 6)
     }
   }
 
-  // Road dashes
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)'
+  // Road grid
+  ctx.strokeStyle = 'rgba(64, 130, 1, 0.06)'
   ctx.lineWidth   = 1
-  ctx.setLineDash([8, 8])
-  for (let x = ROAD / 2; x < w; x += STEP) {
+  for (let x = 0; x < w; x += 24) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke()
   }
-  for (let y = ROAD / 2; y < h; y += STEP) {
+  for (let y = 0; y < h; y += 24) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke()
   }
-  ctx.setLineDash([])
 }
 
-// ── Food drawing ─────────────────────────────────────────────────────────────
-function spawnFood () {
+// ── Food drawing (pixel apple) ───────────────────────────────────────────────
+function spawnFood() {
   const x = Math.floor(Math.random() * cols)
   const y = Math.floor(Math.random() * rows)
   foodItems.push({ x, y })
 }
 
-function drawFood () {
+function drawFood() {
   foodItems.forEach(f => {
-    const fx = f.x * CELL + CELL / 2
-    const fy = f.y * CELL + CELL / 2
-    ctx.shadowBlur = 10
-    ctx.shadowColor = '#ff3333'
-    ctx.fillStyle = '#ff2222'
-    ctx.beginPath()
-    ctx.arc(fx, fy, 6, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.shadowBlur = 0
-    ctx.fillStyle = '#ff8888'
-    ctx.beginPath()
-    ctx.arc(fx - 2, fy - 2, 2, 0, Math.PI * 2)
-    ctx.fill()
+    const fx = f.x * CELL
+    const fy = f.y * CELL
+    ctx.fillStyle = '#d64b4b'
+    ctx.fillRect(fx + 4, fy + 4, 10, 10)
+    ctx.fillStyle = '#f09b7e'
+    ctx.fillRect(fx + 6, fy + 6, 3, 3)
+    ctx.fillStyle = '#4d7a3f'
+    ctx.fillRect(fx + 8, fy + 2, 2, 4)
   })
 }
 
-// ── Snake drawing ─────────────────────────────────────────────────────────────
-function drawSnake () {
+// ── Snake drawing (pixel art blocks) ─────────────────────────────────────────
+function drawSnake() {
+  if (!snakeMoving.value) return;
   snake.forEach((seg, i) => {
     const isHead = i === snake.length - 1
     const sx = seg.x * CELL
     const sy = seg.y * CELL
 
     if (isHead) {
-      ctx.shadowBlur = 12
-      ctx.shadowColor = '#39FF14'
-      ctx.fillStyle = '#39FF14'
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(sx + 1, sy + 1, CELL - 2, CELL - 2)
+      ctx.fillStyle = '#408201'
+      ctx.fillRect(sx + 5, sy + 5, 3, 3)
+      ctx.fillRect(sx + 12, sy + 5, 3, 3)
+      ctx.fillStyle = '#408201'
+      ctx.fillRect(sx + 7, sy + 10, 4, 2)
     } else {
       const t = i / snake.length
-      const g = Math.floor(120 + t * 135)
-      ctx.fillStyle = `rgb(0,${g},0)`
-      ctx.shadowBlur = 0
-    }
-
-    ctx.fillRect(sx + 1, sy + 1, CELL - 2, CELL - 2)
-    ctx.shadowBlur = 0
-
-    if (isHead) {
-      ctx.fillStyle = '#0a0a14'
-      const eyeOff = direction.x !== 0 ? 2 : 0
-      ctx.fillRect(sx + 4 + eyeOff, sy + 3, 3, 3)
-      ctx.fillRect(sx + 4 + eyeOff, sy + 11, 3, 3)
+      const g = Math.floor(60 + t * 40)
+      ctx.fillStyle = `rgb(30,${g},8)`
+      ctx.fillRect(sx + 2, sy + 2, CELL - 4, CELL - 4)
     }
   })
 }
 
-// ── Game logic ────────────────────────────────────────────────────────────────
-function update () {
+// ── Game logic ───────────────────────────────────────────────────────────────
+function update() {
+  if (!snakeMoving.value) return
   tick++
-  // Gradually increase speed
   const effectiveSpeed = Math.max(2, SPEED - Math.floor(tick / 300))
   if (tick % effectiveSpeed !== 0) return
 
@@ -206,12 +206,11 @@ function update () {
     snake.shift()
   }
 
-  // Accumulate distance
   stats.km += 0.00035
   stats.speed = 2.4 + (tick % 120) * 0.008
 }
 
-function loop () {
+function loop() {
   if (isPaused.value) return
   const w = canvasRef.value.width
   const h = canvasRef.value.height
@@ -222,7 +221,7 @@ function loop () {
   animId = requestAnimationFrame(loop)
 }
 
-function initGame () {
+function initGame() {
   const w = canvasRef.value.offsetWidth
   const h = canvasRef.value.offsetHeight
   canvasRef.value.width  = w
@@ -244,9 +243,10 @@ function initGame () {
 
 // ── Auto-pilot: smooth snake turns ───────────────────────────────────────────
 let turnTimer = null
-function scheduleAutoTurn () {
+function scheduleAutoTurn() {
   const interval = 1800 + Math.random() * 2200
   turnTimer = setTimeout(() => {
+    if (!snakeMoving.value) { scheduleAutoTurn(); return }
     const dirs = [
       { x: 1, y: 0 }, { x: -1, y: 0 },
       { x: 0, y: 1 }, { x: 0, y: -1 },
@@ -257,11 +257,11 @@ function scheduleAutoTurn () {
 }
 
 // ── Controls ──────────────────────────────────────────────────────────────────
-function pause  () { isPaused.value = true;  cancelAnimationFrame(animId) }
-function resume () { isPaused.value = false; loop() }
-function stopGame () { router.push({ name: 'home' }) }
+function pause()  { isPaused.value = true;  cancelAnimationFrame(animId) }
+function resume() { isPaused.value = false; loop() }
+function stopGame() { router.push({ name: 'home' }) }
 
-function onKey (e) {
+function onKey(e) {
   const map = { ArrowRight: {x:1,y:0}, ArrowLeft: {x:-1,y:0}, ArrowDown: {x:0,y:1}, ArrowUp: {x:0,y:-1} }
   if (map[e.key]) pendingDir = map[e.key]
 }
@@ -269,8 +269,8 @@ function onKey (e) {
 // ── Swipe controls ────────────────────────────────────────────────────────────
 let touchX = 0
 let touchY = 0
-function onTouchStart (e) { touchX = e.touches[0].clientX; touchY = e.touches[0].clientY }
-function onTouchEnd (e) {
+function onTouchStart(e) { touchX = e.touches[0].clientX; touchY = e.touches[0].clientY }
+function onTouchEnd(e) {
   const dx = e.changedTouches[0].clientX - touchX
   const dy = e.changedTouches[0].clientY - touchY
   if (Math.abs(dx) > Math.abs(dy)) {
@@ -282,6 +282,7 @@ function onTouchEnd (e) {
 
 onMounted(() => {
   ctx = canvasRef.value.getContext('2d')
+  ctx.imageSmoothingEnabled = false
   initGame()
   loop()
   scheduleAutoTurn()
@@ -303,7 +304,7 @@ onUnmounted(() => {
   position: relative;
   overflow: hidden;
   min-height: 0;
-  background: #1a1a2e;
+  background: #F2F0EF;
 }
 
 .game-canvas {
@@ -311,11 +312,41 @@ onUnmounted(() => {
   height: 100%;
   display: block;
   image-rendering: pixelated;
+  image-rendering: crisp-edges;
   transition: filter 0.3s ease;
 }
 
 .canvas-paused {
-  filter: blur(6px) brightness(0.5);
+  filter: brightness(0.55);
+}
+
+/* Snake toggle button */
+.snake-toggle {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(50px);
+  padding: 5px 12px;
+  background: rgba(242, 240, 239, 0.9);
+  border: 2px solid #408201;
+  color: #408201;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  cursor: pointer;
+  z-index: 15;
+  image-rendering: pixelated;
+  letter-spacing: 1px;
+  transition: all 0.15s;
+}
+.snake-toggle.off {
+  border-color: #d64b4b;
+  color: #d64b4b;
+}
+.snake-toggle:hover {
+  background: rgba(64, 130, 1, 0.08);
+}
+.snake-toggle:active {
+  transform: translateX(50px) scale(0.95);
 }
 
 /* HUD */
@@ -332,15 +363,14 @@ onUnmounted(() => {
 .hud-right { right: 12px; align-items: flex-end; }
 
 .hud-pill {
-  background: rgba(0,0,0,0.65);
-  border: 1px solid rgba(57,255,20,0.3);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: 'Nunito', sans-serif;
-  padding: 4px 11px;
-  border-radius: 20px;
-  backdrop-filter: blur(4px);
+  background: rgba(242, 240, 239, 0.95);
+  border: 2px solid #408201;
+  color: #408201;
+  font-size: 8px;
+  font-weight: 400;
+  font-family: 'Press Start 2P', monospace;
+  padding: 5px 10px;
+  image-rendering: pixelated;
 }
 
 /* PAUSE bar */
@@ -350,25 +380,27 @@ onUnmounted(() => {
   left: 50%;
   transform: translateX(-50%);
   width: 88%;
-  padding: 14px 24px;
-  background: rgba(15,15,26,0.6);
-  border: 1px solid rgba(255,255,255,0.15);
-  backdrop-filter: blur(12px);
-  border-radius: 20px;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 900;
-  font-family: 'Nunito', sans-serif;
+  padding: 12px 24px;
+  background: rgba(242, 240, 239, 0.92);
+  border: 2px solid #408201;
+  backdrop-filter: none;
+  color: #408201;
+  font-size: 12px;
+  font-weight: 400;
+  font-family: 'Press Start 2P', monospace;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   letter-spacing: 2px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  image-rendering: pixelated;
+}
+.pause-bar:active {
+  background: rgba(64, 130, 1, 0.08);
 }
 
-.pause-icon { font-size: 18px; }
+.pause-icon { font-size: 16px; }
 .pause-text { letter-spacing: 3px; }
 
 /* Overlay */
@@ -382,31 +414,30 @@ onUnmounted(() => {
 }
 
 .pause-modal {
-  background: rgba(15,15,26,0.92);
-  border: 1px solid rgba(57,255,20,0.25);
-  border-radius: 28px;
-  padding: 28px 24px;
+  background: rgba(242, 240, 239, 0.95);
+  border: 2px solid #408201;
+  padding: 24px 20px;
   width: 82%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.7);
-  backdrop-filter: blur(6px);
+  gap: 20px;
+  backdrop-filter: none;
+  image-rendering: pixelated;
 }
 
 .pause-title {
-  font-size: 22px;
-  font-weight: 900;
-  color: #fff;
-  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #408201;
+  font-family: 'Press Start 2P', monospace;
   letter-spacing: 2px;
 }
 
 /* Stats */
 .pause-stats {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
   justify-content: space-around;
 }
@@ -415,21 +446,21 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .ps-num {
-  font-size: 26px;
-  font-weight: 900;
-  color: #39FF14;
-  font-family: 'Nunito', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #408201;
+  font-family: 'Press Start 2P', monospace;
 }
 
 .ps-lbl {
-  font-size: 10px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.45);
-  font-family: 'Nunito', sans-serif;
+  font-size: 7px;
+  font-weight: 400;
+  color: rgba(64, 130, 1, 0.55);
+  font-family: 'Press Start 2P', monospace;
   letter-spacing: 0.5px;
 }
 
@@ -458,11 +489,11 @@ onUnmounted(() => {
 .ouro-icon {
   position: absolute;
   font-size: 26px;
-  color: #39FF14;
+  color: #408201;
   font-weight: 900;
 }
 
-.ouro-stop { color: #ff4444; }
+.ouro-stop { color: #d64b4b; }
 
 /* Overlay transition */
 .overlay-fade-enter-active,

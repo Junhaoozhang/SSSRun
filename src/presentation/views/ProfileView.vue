@@ -97,14 +97,14 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  padding: clamp(10px, 1.8vw, 14px) clamp(12px, 2vw, 16px);
   background: #fff;
   border-bottom: 1px solid #eee;
   flex-shrink: 0;
 }
 .back-btn {
-  width: 36px;
-  height: 36px;
+  width: clamp(40px, 5.5vw, 48px);
+  height: clamp(40px, 5.5vw, 48px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -116,12 +116,12 @@ onMounted(() => {
   flex-shrink: 0;
 }
 .pf-title {
-  font-size: 15px;
+  font-size: clamp(15px, 2.2vw, 20px);
   font-weight: 700;
   color: #111;
   flex: 1;
   text-align: center;
-  padding-right: 36px; /* offset back btn */
+  padding-right: clamp(36px, 5.5vw, 48px); /* offset back btn */
 }
 
 /* Banner */
@@ -129,7 +129,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 14px;
+  padding: clamp(16px, 2.5vw, 20px) clamp(14px, 2.2vw, 18px);
   background: #fff;
   border-bottom: 1px solid #eee;
   flex-shrink: 0;
@@ -142,12 +142,12 @@ onMounted(() => {
   flex-shrink: 0;
 }
 .pf-avatar {
-  width: 68px;
-  height: 68px;
+  width: clamp(68px, 10vw, 84px);
+  height: clamp(68px, 10vw, 84px);
   border-radius: 50%;
   background: #2a9e2a;
   color: #fff;
-  font-size: 28px;
+  font-size: clamp(28px, 4vw, 34px);
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -155,12 +155,12 @@ onMounted(() => {
   border: 3px solid #eee;
 }
 .pf-level {
-  font-size: 11px;
+  font-size: clamp(10px, 1.5vw, 13px);
   font-weight: 700;
   color: #fff;
   background: #f5a623;
   border-radius: 8px;
-  padding: 2px 8px;
+  padding: clamp(3px, 0.8vw, 5px) clamp(8px, 1.4vw, 10px);
 }
 .pf-snake-wrap {
   flex: 1;
@@ -178,23 +178,23 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  padding: 14px 12px;
+  padding: clamp(14px, 2.2vw, 18px) clamp(12px, 2vw, 16px);
   overflow-y: auto;
   align-content: start;
 }
 .stat-card {
   background: #fff;
-  border-radius: 12px;
+  border-radius: clamp(12px, 2vw, 16px);
   border: 1px solid #eee;
-  padding: 18px 12px 14px;
+  padding: clamp(16px, 2.6vw, 20px) clamp(12px, 2vw, 16px) clamp(14px, 2.2vw, 18px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
 }
-.stat-icon { font-size: 24px; margin-bottom: 2px; }
-.stat-num  { font-size: 22px; font-weight: 800; color: #2a9e2a; line-height: 1; }
-.stat-lbl  { font-size: 11px; font-weight: 600; color: #aaa; text-align: center; margin-top: 2px; }
+.stat-icon { font-size: clamp(24px, 3.4vw, 30px); margin-bottom: 2px; }
+.stat-num  { font-size: clamp(22px, 3.2vw, 28px); font-weight: 800; color: #2a9e2a; line-height: 1; }
+.stat-lbl  { font-size: clamp(11px, 1.6vw, 14px); font-weight: 600; color: #aaa; text-align: center; margin-top: 2px; }
 </style>
 
 

@@ -1,13 +1,13 @@
 <template>
   <div class="home-view">
 
-    <!-- 🐍 Map area (always visible, always general view) 🐍 -->
+    <!-- ������ Map area (always visible, always general view) ������ -->
     <div class="map-content">
       <div ref="mapRef" class="map" />
 
       <!-- Danger flash overlay -->
       <div v-if="dangerLevel && playMode" class="danger-flash" :class="dangerLevel">
-        <div class="danger-label">⚠️ Estela aprop!</div>
+        <div class="danger-label">��� Estela aprop!</div>
       </div>
 
       <!-- Pause overlay (play mode) -->
@@ -26,20 +26,11 @@
               </div>
               <div class="stat-row">
                 <span class="stat-label">Manzanas comidas</span>
-                <span class="stat-val">🍎 {{ statsApples }}</span>
+                <span class="stat-val">���� {{ statsApples }}</span>
               </div>
             </div>
-            <button class="pause-action continue pixel-play-btn" @click="paused = false">
-              <svg class="pixel-play-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" role="img">
-                <g shape-rendering="crispEdges" fill="#101817">
-                  <rect x="5" y="3" width="2" height="10" />
-                  <rect x="7" y="5" width="2" height="6" />
-                  <rect x="9" y="7" width="2" height="2" />
-                </g>
-              </svg>
-              <span class="btn-label">Continuar</span>
-            </button>
-            <button class="pause-action finish" @click="finishRun">🏁 Acabar recorrido</button>
+            <button class="pause-action continue" @click="paused = false">��� Continuar</button>
+            <button class="pause-action finish" @click="finishRun">���� Acabar recorrido</button>
           </div>
         </div>
       </Transition>
@@ -48,7 +39,7 @@
       <Transition name="fade">
         <div v-if="showSummary" class="pause-overlay">
           <div class="pause-card">
-            <div class="pause-title">🎉 Recorrido completado</div>
+            <div class="pause-title">���� Recorrido completado</div>
             <div class="pause-stats">
               <div class="stat-row">
                 <span class="stat-label">Distancia</span>
@@ -60,7 +51,7 @@
               </div>
               <div class="stat-row">
                 <span class="stat-label">Manzanas comidas</span>
-                <span class="stat-val">🍎 {{ statsApples }}</span>
+                <span class="stat-val">���� {{ statsApples }}</span>
               </div>
               <div class="stat-row">
                 <span class="stat-label">Tiempo</span>
@@ -71,7 +62,7 @@
                 <span class="stat-val stat-pts">+{{ statsPoints.toLocaleString() }} pts</span>
               </div>
             </div>
-            <button class="pause-action continue" @click="closeSummary">✅ Aceptar</button>
+            <button class="pause-action continue" @click="closeSummary">ԣ� Aceptar</button>
           </div>
         </div>
       </Transition>
@@ -80,7 +71,7 @@
       <Transition name="fade">
         <div v-if="showGroupPicker" class="picker-overlay" @click.self="showGroupPicker = false">
           <div class="picker-sheet">
-            <div class="picker-title">Con quien juegas?</div>
+            <div class="picker-title">-+Con quien juegas?</div>
             <button class="picker-option" @click="startPlay(null)">
               <span>General</span>
             </button>
@@ -124,16 +115,16 @@
               </div>
               <div class="player-info">
                 <div class="player-name">{{ f.name }}</div>
-                <div class="player-sub" :style="{ color: f.isOnline ? '#408201' : '#888' }">
-                  {{ f.isOnline ? '🟢 Jugando' : '🔴 Offline' }} - Nv.{{ f.level }}
+                <div class="player-sub" :style="{ color: f.isOnline ? '#2ecc71' : '#aaa' }">
+                  {{ f.isOnline ? 'Jugando' : 'Offline' }} -� Nv.{{ f.level }}
                 </div>
               </div>
-              <span class="badge-food">🍎 {{ f.food }}</span>
-              <button class="icon-btn" @click="removeFriend(f.id)">✕</button>
+              <span class="badge-food">���� {{ f.food }}</span>
+              <button class="icon-btn" @click="removeFriend(f.id)">ԣ�</button>
             </div>
           </div>
 
-          <p class="section-label mt">Añadir amigos</p>
+          <p class="section-label mt">A+�adir amigos</p>
           <div class="player-list">
             <div v-for="f in nonFriends" :key="'nf-'+f.id" class="player-row muted">
               <div class="avatar" :style="{ background: f.color + '18', border: '2px solid ' + f.color, color: f.color }">
@@ -143,16 +134,16 @@
                 <div class="player-name">{{ f.name }}</div>
                 <div class="player-sub">Nv.{{ f.level }}</div>
               </div>
-              <button class="add-btn" @click="addFriend(f.id)">+ Añadir</button>
+              <button class="add-btn" @click="addFriend(f.id)">+ A+�adir</button>
             </div>
           </div>
-          <p v-if="nonFriends.length === 0" class="empty-msg">¡Ya sigues a todos!</p>
+          <p v-if="nonFriends.length === 0" class="empty-msg">-�Ya sigues a todos!</p>
         </div>
 
         <!-- Grupos list -->
         <div v-if="friendTab === 'grupos'" class="panel-body">
           <template v-if="managingGroup">
-            <button class="back-link" @click="managingGroup = null">← Volver</button>
+            <button class="back-link" @click="managingGroup = null">��� Volver</button>
             <div class="group-card">
               <span style="font-size:28px">{{ managingGroup.emoji }}</span>
               <div>
@@ -162,7 +153,7 @@
             </div>
 
             <p class="section-label">Miembros</p>
-            <p v-if="groupMembers(managingGroup.id).length === 0" class="empty-msg">Sin miembros aún</p>
+            <p v-if="groupMembers(managingGroup.id).length === 0" class="empty-msg">Sin miembros a+�n</p>
             <div class="player-list">
               <div v-for="p in groupMembers(managingGroup.id)" :key="'gm-'+p.id" class="player-row">
                 <div class="avatar sm" :style="{ background: p.color + '18', border: '2px solid ' + p.color, color: p.color }">
@@ -172,11 +163,11 @@
                   <div class="player-name">{{ p.name }}</div>
                   <div class="player-sub">Nv.{{ p.level }}</div>
                 </div>
-                <button class="icon-btn" @click="removeMemberFromGroup(managingGroup.id, p.id)">✕</button>
+                <button class="icon-btn" @click="removeMemberFromGroup(managingGroup.id, p.id)">ԣ�</button>
               </div>
             </div>
 
-            <p class="section-label mt">Añadir miembros</p>
+            <p class="section-label mt">A+�adir miembros</p>
             <div class="player-list">
               <div v-for="p in nonGroupMembers(managingGroup.id)" :key="'ngm-'+p.id" class="player-row muted">
                 <div class="avatar sm" :style="{ background: p.color + '18', border: '2px solid ' + p.color, color: p.color }">
@@ -184,9 +175,9 @@
                 </div>
                 <div class="player-info">
                   <div class="player-name">{{ p.name }}</div>
-                  <div class="player-sub">Nv.{{ f.level }}</div>
+                  <div class="player-sub">Nv.{{ p.level }}</div>
                 </div>
-                <button class="add-btn" @click="addMemberToGroup(managingGroup.id, p.id)">+ Añadir</button>
+                <button class="add-btn" @click="addMemberToGroup(managingGroup.id, p.id)">+ A+�adir</button>
               </div>
             </div>
 
@@ -215,7 +206,7 @@
                     {{ p.name.charAt(0) }}
                   </div>
                   <span class="player-name">{{ p.name }}</span>
-                  <span v-if="newGroupMemberIds.has(p.id)" class="check-mark">✓</span>
+                  <span v-if="newGroupMemberIds.has(p.id)" class="check-mark">ԣ�</span>
                 </button>
               </div>
               <div class="form-row">
@@ -231,9 +222,9 @@
                 <div class="player-info">
                   <div class="player-name">{{ g.name }}</div>
                   <div class="player-sub">
-                    👥 {{ groupMemberCount(g.id) || g.members }} -
-                    <span :style="{ color: g.activeNow > 0 ? '#408201' : '#888' }">
-                      {{ g.activeNow > 0 ? `🟢 ${g.activeNow} activos` : '🔴 inactivo' }}
+                    ���� {{ groupMemberCount(g.id) || g.members }} -�
+                    <span :style="{ color: g.activeNow > 0 ? '#2ecc71' : '#aaa' }">
+                      {{ g.activeNow > 0 ? `��� ${g.activeNow} activos` : '��� inactivo' }}
                     </span>
                   </div>
                 </div>
@@ -253,17 +244,17 @@ import { ref, computed, watch, inject, onMounted, onUnmounted } from 'vue'
 import { GetGroupsUseCase }  from '@/application/usecases/GetGroupsUseCase.js'
 import L from 'leaflet'
 
-// 🐍 Injected from App.vue 🐍
+// ������ Injected from App.vue ������������������������������������������������������������������������������������������������������������������������������������������
 const playMode        = inject('playMode', ref(false))
 const navTab          = inject('navTab',   ref('map'))
 const showGroupPicker = inject('showGroupPicker', ref(false))
 const paused          = inject('gamePaused', ref(false))
 const currentPlayer   = inject('currentPlayer', ref(null))
 
-// 🐍 Local state 🐍
+// ������ Local state ������������������������������������������������������������������������������������������������������������������������������������������������������������������������
 const friendTab = ref('amigos')
 
-// 🐍 Pause / summary state 🐍
+// ������ Pause / summary state ������������������������������������������������������������������������������������������������������������������������������������������
 const showSummary = ref(false)
 const statsApples = ref(0)
 const statsKm     = ref('0.00')
@@ -299,7 +290,7 @@ function startPlay (groupId) {
   playMode.value = true
 }
 
-// 🐍 Data 🐍
+// ������ Data ���������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������
 // Full pool of potential players (friends + non-friends)
 const ALL_PLAYERS = [
   { id: 1, name: 'Jiajun',      level: 6,  score: 98000,  streak: 3,  color: '#FF6B35', isOnline: true,  food: 312, speed: 4.2 },
@@ -369,11 +360,11 @@ function removeMemberFromGroup (groupId, playerId) {
   groupMemberMap.value = map
 }
 
-// 🐍 Create group 🐍
-const GROUP_EMOJIS = ['🐍','🦎','🦊','🐢','🦖','🦈','🐉','🐲','🐙','🦑','🐚','🐌']
+// ������ Create group ���������������������������������������������������������������������������������������������������������������������������������������������������������������������
+const GROUP_EMOJIS = ['����','����','���','����','��Ž','�������','����','����','����','��Ƭ','���+','��Ļ']
 const showCreateGroup  = ref(false)
 const newGroupName     = ref('')
-const newGroupEmoji    = ref('🐍')
+const newGroupEmoji    = ref('����')
 const newGroupMemberIds = ref(new Set())
 const managingGroup    = ref(null)
 
@@ -385,7 +376,7 @@ function toggleNewMember (id) {
 function cancelCreateGroup () {
   showCreateGroup.value = false
   newGroupName.value = ''
-  newGroupEmoji.value = '🐍'
+  newGroupEmoji.value = '����'
   newGroupMemberIds.value = new Set()
 }
 function submitCreateGroup () {
@@ -405,25 +396,18 @@ function toggleJoin (id) {
   groups.value = GetGroupsUseCase.execute()
 }
 
-// 🐍 Map 🐍
+// ������ Map ������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������
 const mapRef = ref(null)
 let leafletMap   = null
 let playerStates = []
 
-// 🐍 Reactive food 🐍
+// ������ Reactive food ������������������������������������������������������������������������������������������������������������������������������������������������������������������
 const foods = []  // { lat, lng, marker, eaten, routePts }
 
 function spawnFood (lat, lng, routePts = null) {
-  const html = `
-    <div class="food-apple" aria-label="Manzana">
-      <span class="food-apple__stem"></span>
-      <span class="food-apple__leaf"></span>
-      <span class="food-apple__body"></span>
-      <span class="food-apple__shine"></span>
-    </div>
-  `
+  const html = `<div style="font-size:20px;line-height:1;filter:drop-shadow(0 1px 4px rgba(0,0,0,.3));transition:transform .15s">����</div>`
   const marker = L.marker([lat, lng], {
-    icon: L.divIcon({ html, className: 'food-marker', iconSize: [26,26], iconAnchor: [13,13] }),
+    icon: L.divIcon({ html, className: '', iconSize: [22,22], iconAnchor: [11,11] }),
     zIndexOffset: 50,
   }).addTo(leafletMap)
   return { lat, lng, marker, eaten: false, routePts }
@@ -447,7 +431,7 @@ function popApple (marker) {
   }
 }
 
-// 🐍 Player defs 🐍
+// ������ Player defs ������������������������������������������������������������������������������������������������������������������������������������������������������������������������
 // groupIds: groups this player belongs to (matches backend groups.js ids)
 const PLAYER_DEFS = [
   { name: 'Jiajun', color: '#E67E22', phase: 0.00, groupIds: [2],
@@ -456,7 +440,7 @@ const PLAYER_DEFS = [
     wpts: [[41.3882,2.1594],[41.3882,2.1651],[41.3903,2.1651],[41.3903,2.1594]] },
   { name: 'Carlos', color: '#E74C3C', phase: 0.50, groupIds: [1, 3],
     wpts: [[41.3861,2.1700],[41.3882,2.1700],[41.3882,2.1724],[41.3861,2.1724]] },
-  { name: 'Maria',  color: '#8E44AD', phase: 0.70, groupIds: [1],
+  { name: 'Mar+�a',  color: '#8E44AD', phase: 0.70, groupIds: [1],
     wpts: [[41.3903,2.1651],[41.3930,2.1651],[41.3930,2.1680],[41.3903,2.1680]] },
   { name: 'Pau',    color: '#16A085', phase: 0.10, groupIds: [3],
     wpts: [[41.3861,2.1565],[41.3882,2.1565],[41.3882,2.1594],[41.3861,2.1594]] },
@@ -498,10 +482,10 @@ function nearTrail (lat, lng, trail) {
 }
 
 let walkInterval = null
-const WALK_SPEED = 1500   // ms per step 🐍 visually ~5 min/km pace
-const STEP_KM    = 0.005  // km per step: 0.005 * (3600/1.5) = 12 km/h 🐍 5 min/km
+const WALK_SPEED = 1500   // ms per step ��� visually ~5 min/km pace
+const STEP_KM    = 0.005  // km per step: 0.005 * (3600/1.5) = 12 km/h ��� 5 min/km
 
-// 🐍 Danger alert 🐍
+// ������ Danger alert ���������������������������������������������������������������������������������������������������������������������������������������������
 const dangerLevel = ref('')   // '' | 'low' | 'med' | 'high'
 let lastDangerBeep = 0
 let audioCtx = null
@@ -560,7 +544,7 @@ function checkDanger (la, ln) {
   }
 }
 
-// 🐍 Group filter watcher removed (map always shows all players) 🐍
+// ������ Group filter watcher removed (map always shows all players) ���������������������
 
 const USER_WPTS = [[41.3892,2.1637],[41.3870,2.1637],[41.3870,2.1665],[41.3892,2.1665]]
 let userRoutePts = []
@@ -583,7 +567,7 @@ async function initMap () {
   L.tileLayer(
   'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
   {
-    attribution: '© OSM, © CARTO',
+    attribution: '-� OSM, -� CARTO',
     maxZoom: 19,
   }
 ).addTo(leafletMap)
@@ -601,12 +585,12 @@ async function initMap () {
     const [lat, lng] = finePts[startIdx]
 
     const headHtml = `<div style="
-      width:32px;height:32px;border-radius:0;
-      background:${p.color};border:3px solid #F2F0EF;
+      width:32px;height:32px;border-radius:50%;
+      background:${p.color};border:3px solid #fff;
       display:flex;align-items:center;justify-content:center;
-      font-size:13px;font-weight:400;color:#F2F0EF;
-      box-shadow:0 0 0 5px ${p.color}44;
-      font-family:'Press Start 2P',monospace;
+      font-size:13px;font-weight:900;color:#fff;
+      box-shadow:0 0 0 5px ${p.color}44,0 3px 12px rgba(0,0,0,.32);
+      font-family:Inter,sans-serif;
     ">${p.name[0]}</div>`
 
     const marker = L.marker([lat, lng], {
@@ -667,7 +651,7 @@ async function initMap () {
   }, WALK_SPEED)
 }
 
-// 🐍 User snake 🐍
+// ������ User snake ���������������������������������������������������������������������������������������������������������������������������������������������������������������������������
 watch(playMode, (on) => {
   // Leaflet needs to recalculate its size when the container changes
   setTimeout(() => leafletMap?.invalidateSize(), 50)
@@ -681,20 +665,20 @@ watch(playMode, (on) => {
 
     const [lat, lng] = userRoutePts[0]
     const headHtml = `<div style="
-      width:36px;height:36px;border-radius:0;
-      background:#408201;border:3px solid #F2F0EF;
+      width:36px;height:36px;border-radius:50%;
+      background:#2a9e2a;border:3px solid #fff;
       display:flex;align-items:center;justify-content:center;
-      font-size:12px;font-weight:400;color:#F2F0EF;
-      box-shadow:0 0 0 6px rgba(64,130,1,0.3);
-      font-family:'Press Start 2P',monospace;
-    ">Tu</div>`
+      font-size:12px;font-weight:900;color:#fff;
+      box-shadow:0 0 0 6px #2a9e2a44,0 3px 14px rgba(0,0,0,.32);
+      font-family:Inter,sans-serif;
+    ">T+�</div>`
     const marker = L.marker([lat, lng], {
       icon: L.divIcon({ html: headHtml, className: '', iconSize: [36,36], iconAnchor: [18,18] }),
       zIndexOffset: 200,
     }).addTo(leafletMap)
-    marker.bindTooltip('<b>Tu</b>', { direction: 'top', offset: [0,-22], permanent: true })
+    marker.bindTooltip('<b>T+�</b>', { direction: 'top', offset: [0,-22], permanent: true })
     const poly = L.polyline([[lat, lng]], {
-      color: '#408201', weight: 9, opacity: 0.9,
+      color: '#2a9e2a', weight: 9, opacity: 0.9,
       lineCap: 'round', lineJoin: 'round',
     }).addTo(leafletMap)
     userState = { marker, poly, ptIdx: 0, trail: [[lat, lng]], tailLen: 20 }
@@ -709,7 +693,7 @@ watch(playMode, (on) => {
       userState.poly.setLatLngs(userState.trail)
       leafletMap?.panTo([la, ln], { animate: true, duration: 0.22 })
 
-      // Fixed-step distance accumulation 🐍 realistic pace (~5 km/h)
+      // Fixed-step distance accumulation ��� realistic pace (~5 km/h)
       runDistKm += STEP_KM
       totalPtsWalked++
 
@@ -781,10 +765,10 @@ onUnmounted(() => {
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
-  background: #F2F0EF;
+  background: #fff;
 }
 
-/* 🐍 Danger flash 🐍 */
+/* ������ Danger flash ������ */
 .danger-flash {
   position: absolute;
   inset: 0;
@@ -800,16 +784,16 @@ onUnmounted(() => {
 .danger-flash.high { background: rgba(220,50,50,.30); border: 4px solid rgba(220,50,50,.72); }
 .danger-label {
   font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 1px;
+  font-weight: 700;
+  letter-spacing: .2px;
   padding: 6px 18px;
+  border-radius: 20px;
   background: rgba(200,30,30,.88);
-  color: #F2F0EF;
-  font-family: 'Press Start 2P', monospace;
-  border: 2px solid #F2F0EF;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
 }
 
-/* 🐍 Map content 🐍 */
+/* ������ Map content ������ */
 .map-content {
   flex: 1;
   position: relative;
@@ -822,132 +806,127 @@ onUnmounted(() => {
   z-index: 0;
 }
 
-/* 🐍 Pause / summary overlay 🐍 */
+/* ������ Pause / summary overlay ������ */
 .pause-overlay {
   position: absolute;
   inset: 0;
   z-index: 40;
-  background: rgba(242, 240, 239, 0.7);
+  background: rgba(0,0,0,.5);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .pause-card {
-  background: #F2F0EF;
-  border: 2px solid #408201;
-  padding: clamp(18px, 3vw, 24px) clamp(16px, 2.6vw, 20px) clamp(14px, 2.4vw, 18px);
-  width: min(92%, 360px);
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 20px 18px;
+  width: 88%;
+  max-width: 320px;
 }
 .pause-title {
-  font-size: clamp(16px, 2.4vw, 20px);
-  font-weight: 400;
-  color: #408201;
-  margin-bottom: clamp(14px, 2.2vw, 18px);
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 18px;
   text-align: center;
-  font-family: 'Press Start 2P', monospace;
-  letter-spacing: 1px;
 }
 .pause-stats {
-  border: 2px solid #408201;
-  padding: clamp(10px, 1.6vw, 14px);
-  margin-bottom: clamp(14px, 2vw, 16px);
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
 }
 .stat-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 7px 0;
-  border-bottom: 1px solid rgba(64, 130, 1, 0.12);
+  border-bottom: 1px solid #f0f0f0;
 }
 .stat-row:last-child { border-bottom: none; }
-.stat-label { font-size: clamp(11px, 1.6vw, 13px); color: rgba(64,130,1,0.55); font-family: 'Press Start 2P', monospace; letter-spacing: 0.5px; }
-.stat-val   { font-size: clamp(12px, 1.8vw, 14px); color: #408201; font-weight: 400; font-family: 'Press Start 2P', monospace; }
-.stat-row-pts { background: rgba(64,130,1,0.06); margin-top: 4px; padding: 9px 0; }
-.stat-pts { color: #408201; font-size: clamp(13px, 2vw, 16px); }
+.stat-label { font-size: 13px; color: #888; }
+.stat-val   { font-size: 14px; color: #111; font-weight: 600; }
+.stat-row-pts { background: #f6fff6; border-radius: 6px; margin-top: 4px; padding: 9px 0; }
+.stat-pts { color: #2a9e2a; font-size: 16px; }
 .pause-action {
   display: block;
   width: 100%;
-  padding: clamp(10px, 1.8vw, 13px);
-  border: 2px solid #408201;
-  font-size: clamp(12px, 1.8vw, 15px);
-  font-weight: 400;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  font-family: 'Press Start 2P', monospace;
+  font-family: 'Inter', sans-serif;
   margin-top: 8px;
-  letter-spacing: 1px;
-  image-rendering: pixelated;
 }
 .pause-action:active { opacity: .8; }
-.pause-action.continue { background: #408201; color: #F2F0EF; }
-.pause-action.finish   { background: #F2F0EF; color: #408201; }
+.pause-action.continue { background: #2a9e2a; color: #fff; }
+.pause-action.finish   { background: #f0f0f0; color: #444; }
 
-/* 🐍 Group picker 🐍 */
+/* ������ Group picker ������ */
 .picker-overlay {
   position: absolute;
   inset: 0;
   z-index: 50;
-  background: rgba(242,240,239,.5);
+  background: rgba(0,0,0,.4);
   display: flex;
   align-items: flex-end;
 }
 .picker-sheet {
-  background: #F2F0EF;
+  background: #fff;
   width: 100%;
-  border: 2px solid #408201;
-  border-width: 2px 0 0 0;
-  padding: clamp(18px, 3vw, 22px) clamp(14px, 2.4vw, 16px) clamp(24px, 4vw, 32px);
+  border-radius: 16px 16px 0 0;
+  padding: 20px 16px 32px;
 }
 .picker-title {
-  font-size: clamp(14px, 2vw, 16px);
-  font-weight: 400;
-  color: #408201;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111;
   margin-bottom: 14px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(64,130,1,0.12);
-  font-family: 'Press Start 2P', monospace;
-  letter-spacing: 0.5px;
+  border-bottom: 1px solid #eee;
 }
 .picker-option {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: clamp(11px, 1.8vw, 13px) 4px;
+  padding: 13px 4px;
   background: none;
   border: none;
-  border-bottom: 1px solid rgba(64,130,1,0.1);
-  font-size: clamp(13px, 1.8vw, 15px);
-  font-weight: 400;
-  color: #408201;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
   cursor: pointer;
   text-align: left;
-  font-family: 'Press Start 2P', monospace;
+  font-family: 'Inter', sans-serif;
 }
-.picker-option:active { background: rgba(64,130,1,0.06); }
+.picker-option:active { background: #f6f6f6; }
 .picker-option:last-of-type { border-bottom: none; }
-.picker-emoji { font-size: clamp(18px, 2.8vw, 20px); }
+.picker-emoji { font-size: 20px; }
 .picker-cancel {
   display: block;
   width: 100%;
   margin-top: 12px;
-  padding: clamp(10px, 1.8vw, 13px);
-  border: 2px solid #408201;
-  background: #F2F0EF;
-  font-size: clamp(12px, 1.8vw, 14px);
-  font-weight: 400;
-  color: #408201;
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
   cursor: pointer;
-  font-family: 'Press Start 2P', monospace;
-  letter-spacing: 1px;
-  image-rendering: pixelated;
+  font-family: 'Inter', sans-serif;
 }
 
-/* 🐍 Side panel (friends) 🐍 */
+/* ������ Side panel (friends) ������ */
 .side-panel {
   position: absolute;
   inset: 0;
   z-index: 10;
-  background: #F2F0EF;
+  background: #fff;
   overflow-y: hidden;
   display: flex;
   flex-direction: column;
@@ -956,24 +935,24 @@ onUnmounted(() => {
 }
 .side-panel.visible { transform: translateX(0); }
 
-/* 🐍 Panel header 🐍 */
+/* ������ Panel header ������ */
 .panel-header {
   display: flex;
   align-items: center;
   gap: 0;
-  border-bottom: 2px solid #408201;
+  border-bottom: 1px solid #eee;
   flex-shrink: 0;
-  background: #F2F0EF;
+  background: #fff;
 }
 .panel-back-btn {
-  width: clamp(44px, 6vw, 52px);
-  height: clamp(44px, 6vw, 52px);
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: none;
   border: none;
-  color: #408201;
+  color: #333;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -983,172 +962,165 @@ onUnmounted(() => {
 }
 .panel-tab {
   flex: 1;
-  padding: clamp(12px, 2vw, 14px) 0;
+  padding: 14px 0;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  font-size: clamp(12px, 1.6vw, 14px);
-  font-weight: 400;
-  color: rgba(64,130,1,0.45);
+  font-size: 14px;
+  font-weight: 600;
+  color: #999;
   cursor: pointer;
-  font-family: 'Press Start 2P', monospace;
-  letter-spacing: 0.5px;
+  font-family: 'Inter', sans-serif;
 }
 .panel-tab.active {
-  color: #408201;
-  border-bottom-color: #408201;
+  color: #2a9e2a;
+  border-bottom-color: #2a9e2a;
 }
 
-/* 🐍 Panel body 🐍 */
+/* ������ Panel body ������ */
 .panel-body {
   flex: 1;
   overflow-y: auto;
-  padding: clamp(12px, 2.2vw, 16px);
+  padding: 16px;
 }
 
-/* 🐍 Shared list items 🐍 */
+/* ������ Shared list items ������ */
 .section-label {
-  font-size: clamp(10px, 1.4vw, 11px);
-  font-weight: 400;
-  color: rgba(64,130,1,0.5);
+  font-size: 11px;
+  font-weight: 700;
+  color: #aaa;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: .6px;
   margin-bottom: 8px;
-  font-family: 'Press Start 2P', monospace;
 }
 .section-label.mt { margin-top: 20px; }
 
-.player-list { display: flex; flex-direction: column; gap: 0; border: 1px solid rgba(64,130,1,0.15); }
+.player-list { display: flex; flex-direction: column; gap: 0; border: 1px solid #eee; border-radius: 10px; overflow: hidden; }
 .player-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: clamp(10px, 1.8vw, 12px) clamp(10px, 1.8vw, 12px);
-  background: #F2F0EF;
-  border-bottom: 1px solid rgba(64,130,1,0.1);
+  padding: 10px 12px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
 }
 .player-row:last-child { border-bottom: none; }
 .player-row.muted { opacity: .8; }
-.player-row.selectable { border: none; cursor: pointer; width: 100%; text-align: left; font-family: 'Press Start 2P', monospace; }
-.player-row.selectable.selected { background: rgba(64,130,1,0.08); }
+.player-row.selectable { border: none; cursor: pointer; width: 100%; text-align: left; font-family: 'Inter', sans-serif; }
+.player-row.selectable.selected { background: #f0fdf0; }
 .player-list.compact { max-height: 180px; overflow-y: auto; }
 
 .avatar {
-  width: clamp(38px, 5.8vw, 44px);
-  height: clamp(38px, 5.8vw, 44px);
-  border-radius: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(14px, 2vw, 16px);
-  font-weight: 400;
+  font-size: 15px;
+  font-weight: 800;
   flex-shrink: 0;
-  font-family: 'Press Start 2P', monospace;
-  image-rendering: pixelated;
 }
-.avatar.sm { width: clamp(32px, 5vw, 38px); height: clamp(32px, 5vw, 38px); font-size: clamp(12px, 1.8vw, 14px); }
+.avatar.sm { width: 32px; height: 32px; font-size: 13px; }
 
 .player-info { flex: 1; min-width: 0; }
-.player-name { font-size: clamp(12px, 1.7vw, 14px); font-weight: 400; color: #408201; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Press Start 2P', monospace; letter-spacing: 0.5px; }
-.player-sub  { font-size: clamp(10px, 1.4vw, 12px); color: rgba(64,130,1,0.55); margin-top: 1px; font-family: 'Press Start 2P', monospace; letter-spacing: 0.25px; }
+.player-name { font-size: 14px; font-weight: 600; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-sub  { font-size: 12px; color: #999; margin-top: 1px; }
 
-.badge-food { font-size: clamp(10px, 1.4vw, 12px); color: #408201; background: rgba(64,130,1,0.06); border: 1px solid rgba(64,130,1,0.15); padding: 2px 7px; flex-shrink: 0; font-family: 'Press Start 2P', monospace; letter-spacing: 0.25px; }
-.icon-btn { width: clamp(26px, 4vw, 30px); height: clamp(26px, 4vw, 30px); background: rgba(64,130,1,0.08); border: 1px solid rgba(64,130,1,0.15); font-size: clamp(10px, 1.4vw, 11px); color: #408201; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Press Start 2P', monospace; }
-.add-btn  { padding: clamp(5px, 1vw, 6px) clamp(10px, 1.6vw, 12px); border: 2px solid #408201; background: none; color: #408201; font-size: clamp(10px, 1.4vw, 12px); font-weight: 400; cursor: pointer; flex-shrink: 0; font-family: 'Press Start 2P', monospace; letter-spacing: 0.5px; image-rendering: pixelated; }
-.outline-btn { padding: clamp(5px, 1vw, 6px) clamp(10px, 1.6vw, 12px); border: 2px solid rgba(64,130,1,0.2); background: none; color: rgba(64,130,1,0.55); font-size: clamp(10px, 1.4vw, 12px); font-weight: 400; cursor: pointer; flex-shrink: 0; font-family: 'Press Start 2P', monospace; letter-spacing: 0.5px; image-rendering: pixelated; }
-.check-mark { font-size: clamp(12px, 1.8vw, 14px); font-weight: 400; color: #408201; width: 18px; text-align: center; flex-shrink: 0; }
-.empty-msg  { text-align: center; color: rgba(64,130,1,0.4); font-size: clamp(11px, 1.5vw, 13px); padding: 16px 0; font-family: 'Press Start 2P', monospace; }
+.badge-food { font-size: 12px; color: #555; background: #f4f4f6; border: 1px solid #e8e8e8; border-radius: 6px; padding: 2px 7px; flex-shrink: 0; }
+.icon-btn { width: 26px; height: 26px; border-radius: 50%; background: #f4f4f6; border: none; font-size: 11px; color: #999; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.add-btn  { padding: 5px 12px; border-radius: 20px; border: 1.5px solid #2a9e2a; background: none; color: #2a9e2a; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0; font-family: 'Inter', sans-serif; }
+.outline-btn { padding: 5px 12px; border-radius: 20px; border: 1.5px solid #ccc; background: none; color: #555; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0; font-family: 'Inter', sans-serif; }
+.check-mark { font-size: 14px; font-weight: 700; color: #2a9e2a; width: 18px; text-align: center; flex-shrink: 0; }
+.empty-msg  { text-align: center; color: #aaa; font-size: 13px; padding: 16px 0; }
 
-/* 🐍 Group card 🐍 */
+/* ������ Group card ������ */
 .group-card {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: clamp(12px, 2.2vw, 14px);
-  border: 1px solid rgba(64,130,1,0.15);
+  padding: 14px;
+  border: 1px solid #eee;
+  border-radius: 10px;
   margin-bottom: 16px;
 }
 .back-link {
   background: none;
   border: none;
-  color: #408201;
-  font-size: clamp(12px, 1.8vw, 14px);
-  font-weight: 400;
+  color: #2a9e2a;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   padding: 0 0 14px 0;
   display: block;
-  font-family: 'Press Start 2P', monospace;
-  letter-spacing: 0.5px;
+  font-family: 'Inter', sans-serif;
 }
 .danger-btn {
   display: block;
   width: 100%;
   margin-top: 16px;
-  padding: clamp(10px, 1.8vw, 12px);
-  border: 2px solid #d64b4b;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1.5px solid #e74c3c;
   background: none;
-  color: #d64b4b;
-  font-size: clamp(12px, 1.8vw, 14px);
-  font-weight: 400;
+  color: #e74c3c;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  font-family: 'Press Start 2P', monospace;
-  letter-spacing: 0.5px;
-  image-rendering: pixelated;
+  font-family: 'Inter', sans-serif;
 }
 
-/* 🐍 Create group form 🐍 */
+/* ������ Create group form ������ */
 .create-group-btn {
   display: block;
   width: 100%;
-  padding: clamp(10px, 1.8vw, 12px);
-  border: 2px dashed #408201;
-  background: rgba(64,130,1,0.04);
-  color: #408201;
-  font-size: clamp(12px, 1.8vw, 14px);
-  font-weight: 400;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1.5px dashed #2a9e2a;
+  background: #f8fff8;
+  color: #2a9e2a;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   margin-bottom: 16px;
-  font-family: 'Press Start 2P', monospace;
-  letter-spacing: 0.5px;
-  image-rendering: pixelated;
+  font-family: 'Inter', sans-serif;
 }
 .create-group-form {
-  border: 1px solid rgba(64,130,1,0.15);
-  padding: clamp(14px, 2.5vw, 16px);
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 16px;
   margin-bottom: 16px;
 }
 .emoji-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 .emoji-btn {
-  width: clamp(34px, 5vw, 36px);
-  height: clamp(34px, 5vw, 36px);
-  border: 2px solid rgba(64,130,1,0.15);
-  background: #F2F0EF;
-  font-size: clamp(15px, 2.2vw, 16px);
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1.5px solid #e8e8e8;
+  background: #fff;
+  font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.emoji-btn.selected { border-color: #408201; background: rgba(64,130,1,0.08); }
+.emoji-btn.selected { border-color: #2a9e2a; background: #f0fdf0; }
 .text-input {
   width: 100%;
-  padding: clamp(10px, 1.6vw, 10px) clamp(12px, 1.8vw, 12px);
-  border: 2px solid rgba(64,130,1,0.15);
-  font-size: clamp(12px, 1.7vw, 14px);
-  font-family: 'Press Start 2P', monospace;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
   margin-bottom: 12px;
   outline: none;
   box-sizing: border-box;
-  background: #F2F0EF;
-  color: #408201;
-  letter-spacing: 0.5px;
 }
-.text-input:focus { border-color: #408201; }
-.text-input::placeholder { color: rgba(64,130,1,0.3); }
+.text-input:focus { border-color: #2a9e2a; }
 .form-row { display: flex; gap: 8px; margin-top: 12px; }
-.cancel-btn { flex: 1; padding: clamp(10px, 1.8vw, 11px); border: 2px solid rgba(64,130,1,0.15); background: #F2F0EF; color: rgba(64,130,1,0.55); font-size: clamp(12px, 1.7vw, 14px); font-weight: 400; cursor: pointer; font-family: 'Press Start 2P', monospace; letter-spacing: 0.5px; image-rendering: pixelated; }
-.submit-btn { flex: 1; padding: clamp(10px, 1.8vw, 11px); border: 2px solid #408201; background: #408201; color: #F2F0EF; font-size: clamp(12px, 1.7vw, 14px); font-weight: 400; cursor: pointer; font-family: 'Press Start 2P', monospace; letter-spacing: 0.5px; image-rendering: pixelated; }
-.submit-btn:disabled { background: rgba(64,130,1,0.2); border-color: rgba(64,130,1,0.2); color: rgba(64,130,1,0.4); cursor: not-allowed; }
+.cancel-btn { flex: 1; padding: 11px; border-radius: 8px; border: 1px solid #ddd; background: #fff; color: #666; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+.submit-btn { flex: 1; padding: 11px; border-radius: 8px; border: none; background: #2a9e2a; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+.submit-btn:disabled { background: #ccc; cursor: not-allowed; }
 
 /* Fade transition */
 .fade-enter-active, .fade-leave-active { transition: opacity .2s; }

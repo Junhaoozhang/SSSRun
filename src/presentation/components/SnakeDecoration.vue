@@ -55,17 +55,18 @@ function update () {
 
 function draw (ctx, w) {
   ctx.clearRect(0, 0, w, CANVAS_ROWS * CELL)
+  ctx.imageSmoothingEnabled = false
 
   // Draw apples
   apples.forEach(a => {
     const ax = a.x * CELL
     const ay = a.y * CELL + 1
-    ctx.fillStyle = '#DD1111'
-    ctx.fillRect(ax + 2, ay + 3, CELL - 4, CELL - 4)
-    ctx.fillStyle = '#FF5555'
-    ctx.fillRect(ax + 3, ay + 4, 3, 3)
-    ctx.fillStyle = '#336633'
-    ctx.fillRect(ax + CELL / 2 - 1, ay, 2, 4)
+    ctx.fillStyle = '#d63a3a'
+    ctx.fillRect(ax + 3, ay + 4, CELL - 6, CELL - 6)
+    ctx.fillStyle = '#f08a6a'
+    ctx.fillRect(ax + 5, ay + 5, 2, 2)
+    ctx.fillStyle = '#4d7a3f'
+    ctx.fillRect(ax + CELL / 2 - 1, ay + 1, 2, 4)
   })
 
   // Draw snake
@@ -75,22 +76,18 @@ function draw (ctx, w) {
     const isHead = i === snake.length - 1
 
     if (isHead) {
-      ctx.shadowBlur = 8
-      ctx.shadowColor = '#39FF14'
-      ctx.fillStyle = '#39FF14'
+      ctx.fillStyle = '#2fca4d'
     } else {
-      const brightness = Math.floor(80 + (i / snake.length) * 120)
+      const brightness = Math.floor(80 + (i / snake.length) * 70)
       ctx.fillStyle = `rgb(0, ${brightness}, 0)`
-      ctx.shadowBlur = 0
     }
 
-    ctx.fillRect(sx + 1, sy + 1, CELL - 2, CELL - 2)
-    ctx.shadowBlur = 0
+    ctx.fillRect(sx + 2, sy + 2, CELL - 4, CELL - 4)
 
     if (isHead) {
-      ctx.fillStyle = '#0a0a14'
-      ctx.fillRect(sx + 3, sy + 3, 2, 2)
-      ctx.fillRect(sx + 7, sy + 3, 2, 2)
+      ctx.fillStyle = '#0d0d14'
+      ctx.fillRect(sx + 5, sy + 5, 3, 3)
+      ctx.fillRect(sx + 10, sy + 5, 3, 3)
     }
   })
 }

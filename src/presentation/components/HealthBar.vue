@@ -46,83 +46,92 @@ const fillClass = computed(() => {
 
 <style scoped>
 .health-bar-wrap {
-  padding: 0 14px 8px;
-  background: #fff;
+  padding: clamp(8px, 1.8vw, 12px) clamp(12px, 2vw, 16px) clamp(10px, 2vw, 14px);
+  background: #F2F0EF;
   flex-shrink: 0;
+  border-bottom: 2px solid #408201;
 }
 .hb-labels {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
+  font-family: 'Press Start 2P', monospace;
 }
 .hb-label-left {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
-.hb-labels small { font-size: 11px; font-weight: 600; color: #aaa; font-family: 'Inter', sans-serif; }
+.hb-labels small {
+  font-size: clamp(9px, 1.4vw, 12px);
+  font-weight: 400;
+  color: #408201;
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: 0.5px;
+}
 .hb-info-btn {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1px solid #bbb;
-  background: #f5f5f5;
-  color: #888;
-  font-size: 10px;
-  font-weight: 700;
+  width: clamp(18px, 2.8vw, 24px);
+  height: clamp(18px, 2.8vw, 24px);
+  border: 1px solid #408201;
+  background: rgba(64, 130, 1, 0.08);
+  color: #408201;
+  font-size: clamp(10px, 1.5vw, 13px);
+  font-weight: 400;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   line-height: 1;
-  font-family: serif;
+  font-family: 'Press Start 2P', monospace;
+  image-rendering: pixelated;
 }
-.hb-info-btn:active { background: #e8e8e8; }
+.hb-info-btn:active { background: rgba(64, 130, 1, 0.2); }
 .hb-tooltip {
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  padding: 12px 14px 10px;
+  background: #F2F0EF;
+  border: 2px solid #408201;
+  padding: clamp(12px, 2vw, 16px) clamp(12px, 2vw, 16px) clamp(10px, 1.8vw, 14px);
   margin-bottom: 8px;
-  font-size: 12px;
-  color: #444;
-  font-family: 'Inter', sans-serif;
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  font-size: clamp(9px, 1.4vw, 12px);
+  color: #408201;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.7;
+  image-rendering: pixelated;
 }
-.hb-tooltip strong { display: block; font-size: 12px; color: #111; margin-bottom: 6px; }
-.hb-tooltip ul { margin: 0; padding-left: 16px; }
-.hb-tooltip li { margin-bottom: 4px; line-height: 1.4; }
+.hb-tooltip strong { display: block; font-size: clamp(10px, 1.6vw, 13px); color: #408201; margin-bottom: 8px; letter-spacing: 0.5px; }
+.hb-tooltip ul { margin: 0; padding-left: 14px; }
+.hb-tooltip li { margin-bottom: 5px; line-height: 1.6; color: rgba(64, 130, 1, 0.75); }
 .hb-tooltip-close {
-  display: block;
-  margin-top: 10px;
-  width: 100%;
-  padding: 7px;
-  border-radius: 7px;
-  border: 1px solid #e0e0e0;
-  background: #f7f7f8;
-  font-size: 12px;
-  font-weight: 600;
-  color: #555;
+  display: inline-block;
+  margin-top: 8px;
+  padding: clamp(6px, 1vw, 8px) clamp(10px, 1.6vw, 12px);
+  border: 2px solid #408201;
+  background: rgba(64, 130, 1, 0.08);
+  font-size: clamp(8px, 1.2vw, 11px);
+  font-weight: 400;
+  color: #408201;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Press Start 2P', monospace;
+  image-rendering: pixelated;
+  letter-spacing: 0.5px;
 }
+.hb-tooltip-close:active { background: rgba(64, 130, 1, 0.2); }
 .hb-track {
-  height: 6px;
-  background: #f0f0f3;
-  border-radius: 3px;
+  height: clamp(8px, 1.4vw, 10px);
+  background: rgba(64, 130, 1, 0.12);
+  border: 1px solid #408201;
   overflow: hidden;
+  image-rendering: pixelated;
 }
 .hb-fill {
   height: 100%;
-  border-radius: 3px;
   transition: width .5s ease;
 }
-.fill-green  { background: #2a9e2a; }
-.fill-yellow { background: #f5a623; }
-.fill-red    { background: #e74c3c; animation: hb-pulse 1s ease-in-out infinite; }
-@keyframes hb-pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+.fill-green  { background: #408201; }
+.fill-yellow { background: #d8b24c; }
+.fill-red    { background: #d64b4b; animation: hb-pulse 0.8s step-end infinite; }
+@keyframes hb-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 .info-fade-enter-active, .info-fade-leave-active { transition: opacity .2s, transform .2s; }
 .info-fade-enter-from, .info-fade-leave-to { opacity: 0; transform: translateY(-4px); }
 </style>
