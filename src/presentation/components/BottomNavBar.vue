@@ -1,11 +1,9 @@
 <template>
-  <!-- Bottom nav area: canvas snake + nav buttons OR pause button -->
   <div class="nav-area" :class="{ 'play-mode': playMode }">
 
-    <!-- Pause mode: big pause button filling the bar -->
     <button v-if="playMode" class="pause-bar-btn" @click="$emit('pause')" aria-label="Pausar">
-      <!-- Small snake toggle inside pause mode too -->
-      <div class="snake-toggle-corner" @click.stop>
+      <div class="snake-toggle-corner">
+
         <button
           class="snake-toggle-mini"
           :class="{ off: snakeDisabled }"
@@ -15,6 +13,20 @@
           <span class="toggle-label">{{ snakeDisabled ? 'OFF' : 'ON' }}</span>
           <span class="toggle-icon">🐍</span>
         </button>
+
+        <div class="info-wrapper">
+          <button
+            class="info-btn"
+            @click.stop="showInfo = !showInfo"
+          >
+            ?
+          </button>
+
+          <div v-if="showInfo" class="info-card">
+            Activa o desactiva la serpiente
+          </div>
+        </div>
+
       </div>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#222"
            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -25,10 +37,8 @@
     </button>
 
     <template v-else>
-      <!-- Canvas snake (v-show keeps canvas in DOM so animation continues) -->
       <canvas v-show="!snakeDisabled" ref="canvasRef" class="snake-canvas" />
 
-      <!-- Small snake toggle in bottom-right corner of map -->
       <div class="snake-toggle-corner">
         <button
           class="snake-toggle-mini"
@@ -39,12 +49,23 @@
           <span class="toggle-label">{{ snakeDisabled ? 'OFF' : 'ON' }}</span>
           <span class="toggle-icon">🐍</span>
         </button>
+
+        <div class="info-wrapper">
+          <button
+            class="info-btn"
+            @click="showInfo = !showInfo"
+          >
+            ?
+          </button>
+
+          <div v-if="showInfo" class="info-card">
+            Activa o desactiva la serpiente
+          </div>
+        </div>
       </div>
 
-      <!-- Flat nav bar background -->
       <div class="nav-bar-bg" />
 
-      <!-- Nav buttons -->
       <div class="nav-btns">
         <button
           class="nav-btn"
@@ -77,7 +98,6 @@
         </button>
       </div>
 
-      <!-- PLAY button -->
       <button class="pixel-play-btn start-play-btn" @click="$emit('play')" aria-label="Jugar">
         <svg class="pixel-play-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" role="img">
           <g shape-rendering="crispEdges" fill="#101817">
@@ -102,6 +122,7 @@ defineEmits(['tab-change', 'play', 'pause'])
 
 const containerWidth = ref(430)
 const snakeDisabled  = ref(false)
+const showInfo = ref(false)
 
 const navPathD = computed(() => {
   const w = containerWidth.value
@@ -454,5 +475,58 @@ onUnmounted(() => {
 .toggle-label {
   font-size: 16px;
   font-weight: 400;
+}
+
+.snake-toggle-corner {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  z-index: 25;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info-wrapper {
+  position: relative;
+}
+
+.info-btn {
+  width: 24px;
+  height: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(242, 240, 239, 0.92);
+  border: 1.5px solid #408201;
+  border-radius: 4px;
+
+  color: #408201;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+
+  cursor: pointer;
+}
+
+.info-card {
+  position: absolute;
+  bottom: 34px;
+  right: 0;
+
+  background: #F2F0EF;
+  border: 2px solid #408201;
+
+  padding: 8px;
+  color: #408201;
+
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+
+  white-space: nowrap;
+
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.12);
 }
 </style>

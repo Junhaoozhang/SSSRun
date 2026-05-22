@@ -17,9 +17,28 @@
     </div>
 
     <!-- Snake movement toggle -->
-    <button class="snake-toggle" :class="{ off: !snakeMoving }" @click="toggleSnake" title="Activar/desactivar serpiente">
-      {{ snakeMoving ? '🐍 ON' : '🐍 OFF' }}
-    </button>
+    <div class="snake-toggle-container">
+      <button
+        class="snake-toggle"
+        :class="{ off: !snakeMoving }"
+        @click="toggleSnake"
+      >
+        {{ snakeMoving ? '🐍 ON' : '🐍 OFF' }}
+      </button>
+
+      <div class="info-wrapper">
+        <button
+          class="info-btn"
+          @click="showInfo = !showInfo"
+        >
+          ?
+        </button>
+
+        <div v-if="showInfo" class="info-card">
+          Activa o desactiva la serpiente
+        </div>
+      </div>
+    </div>
 
     <!-- PAUSE button (shown when playing) -->
     <button v-if="!isPaused" class="pause-bar" @click="pause">
@@ -80,6 +99,7 @@ const router    = useRouter()
 const canvasRef = ref(null)
 const isPaused  = ref(false)
 const snakeMoving = ref(true)
+const showInfo  = ref(false)
 
 const stats = reactive({ food: 0, km: 0, speed: 2.8 })
 
@@ -320,12 +340,21 @@ onUnmounted(() => {
   filter: brightness(0.55);
 }
 
-/* Snake toggle button */
-.snake-toggle {
+/* Snake toggle container */
+.snake-toggle-container {
   position: absolute;
   top: 12px;
   left: 50%;
-  transform: translateX(50px);
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 50;
+}
+
+/* Snake toggle button */
+.snake-toggle {
   padding: 5px 12px;
   background: rgba(242, 240, 239, 0.9);
   border: 2px solid #408201;
@@ -333,11 +362,60 @@ onUnmounted(() => {
   font-family: 'Press Start 2P', monospace;
   font-size: 8px;
   cursor: pointer;
-  z-index: 15;
   image-rendering: pixelated;
   letter-spacing: 1px;
   transition: all 0.15s;
 }
+
+.info-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.info-btn {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(242, 240, 239, 0.95);
+  border: 2px solid #408201;
+  color: #408201;
+
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  line-height: 1;
+
+  cursor: pointer;
+  image-rendering: pixelated;
+}
+
+.info-card {
+  position: absolute;
+  top: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  background: #F2F0EF;
+  border: 2px solid #408201;
+  color: #408201;
+
+  padding: 8px;
+  font-size: 8px;
+  white-space: nowrap;
+
+  z-index: 100;
+}
+
+.info-btn:hover {
+  background: rgba(64, 130, 1, 0.08);
+}
+
 .snake-toggle.off {
   border-color: #d64b4b;
   color: #d64b4b;

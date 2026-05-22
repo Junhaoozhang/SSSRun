@@ -29,14 +29,7 @@
                 <span class="stat-val">🍎 {{ statsApples }}</span>
               </div>
             </div>
-            <button class="pause-action continue pixel-play-btn" @click="paused = false">
-              <svg class="pixel-play-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" role="img">
-                <g shape-rendering="crispEdges" fill="#101817">
-                  <rect x="5" y="3" width="2" height="10" />
-                  <rect x="7" y="5" width="2" height="6" />
-                  <rect x="9" y="7" width="2" height="2" />
-                </g>
-              </svg>
+            <button class="pause-action finish" @click="paused = false">
               <span class="btn-label">Continuar</span>
             </button>
             <button class="pause-action finish" @click="finishRun">🏁 Acabar recorrido</button>
@@ -878,9 +871,8 @@ onUnmounted(() => {
   image-rendering: pixelated;
 }
 .pause-action:active { opacity: .8; }
-.pause-action.continue { background: #408201; color: #F2F0EF; }
+.pause-action.continue { background: #F2F0EF; color: #408201; }
 .pause-action.finish   { background: #F2F0EF; color: #408201; }
-
 /* 🐍 Group picker 🐍 */
 .picker-overlay {
   position: absolute;

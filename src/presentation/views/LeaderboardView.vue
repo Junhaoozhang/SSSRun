@@ -157,7 +157,7 @@ onMounted(() => {
   flex-direction: column;
   overflow: hidden;
   height: 100%;
-  background: #ffffff;
+  background: #F2F0EF;
   font-family: 'Press Start 2P', monospace;
 }
 
@@ -167,7 +167,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: clamp(10px, 1.8vw, 14px) clamp(10px, 2vw, 16px);
-  background: #ffffff;
+  background: #F2F0EF;
   border-bottom: 2px solid #e0e0e0;
   flex-shrink: 0;
 }
@@ -186,20 +186,20 @@ onMounted(() => {
 }
 .scope-toggle { display: flex; flex: 1; border: 1px solid #d0d0d0; border-radius: 0; overflow: hidden; }
 .scope-btn { flex: 1; padding: clamp(8px, 1.4vw, 12px) 0; border: none; background: #f5f5f5; font-size: clamp(9px, 1.2vw, 12px); font-weight: 400; color: #666666; cursor: pointer; font-family: 'Press Start 2P', monospace; }
-.scope-btn.active { background: #2fca4d; color: #ffffff; }
+.scope-btn.active { background: #2fca4d; color: #F2F0EF; }
 .filter-btn { width: clamp(36px, 5vw, 48px); height: clamp(36px, 5vw, 48px); display: flex; align-items: center; justify-content: center; background: #f5f5f5; border: 1px solid #d0d0d0; border-radius: 0; cursor: pointer; color: #333333; flex-shrink: 0; }
-.filter-btn.active { background: #2fca4d; color: #ffffff; border-color: #2fca4d; }
+.filter-btn.active { background: #2fca4d; color: #F2F0EF; border-color: #2fca4d; }
 
 /* Filter panel */
-.filter-panel { background: #ffffff; border-bottom: 1px solid #e0e0e0; padding: clamp(12px, 2.2vw, 18px); flex-shrink: 0; }
+.filter-panel { background: #F2F0EF; border-bottom: 1px solid #e0e0e0; padding: clamp(12px, 2.2vw, 18px); flex-shrink: 0; }
 .filter-section { margin-bottom: 14px; }
 .filter-section:last-child { margin-bottom: 0; }
 .filter-label { font-size: clamp(8px, 1.1vw, 11px); font-weight: 400; color: #666666; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
 .radio-group { display: flex; border: 1px solid #d0d0d0; border-radius: 0; overflow: hidden; }
 .radio-btn { flex: 1; padding: clamp(8px, 1.4vw, 12px) 0; border: none; background: #f5f5f5; font-size: clamp(9px, 1.2vw, 12px); font-weight: 400; color: #666666; cursor: pointer; font-family: 'Press Start 2P', monospace; border-right: 1px solid #d0d0d0; }
 .radio-btn:last-child { border-right: none; }
-.radio-btn.active { background: #2fca4d; color: #ffffff; }
-.zone-select { width: 100%; padding: clamp(10px, 1.6vw, 14px) clamp(10px, 1.6vw, 14px); border: 1px solid #d0d0d0; border-radius: 0; font-size: clamp(9px, 1.2vw, 12px); font-family: 'Press Start 2P', monospace; background: #ffffff; color: #333333; }
+.radio-btn.active { background: #2fca4d; color: #F2F0EF; }
+.zone-select { width: 100%; padding: clamp(10px, 1.6vw, 14px) clamp(10px, 1.6vw, 14px); border: 1px solid #d0d0d0; border-radius: 0; font-size: clamp(9px, 1.2vw, 12px); font-family: 'Press Start 2P', monospace; background: #F2F0EF; color: #333333; }
 
 /* List */
 .lb-list { flex: 1; overflow-y: auto; padding: clamp(10px, 1.8vw, 14px); display: flex; flex-direction: column; gap: 0; }
@@ -208,7 +208,7 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: clamp(10px, 1.8vw, 14px) clamp(10px, 1.8vw, 14px);
-  background: #ffffff;
+  background: #F2F0EF;
   border-bottom: 1px solid #e0e0e0;
 }
 .lb-row:first-child { border-radius: 0; }
